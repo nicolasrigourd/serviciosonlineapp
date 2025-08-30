@@ -1,0 +1,113 @@
+.screen {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: #fff;
+  overflow: hidden;
+}
+
+.header {
+  padding: 12px 14px 6px;
+  border-bottom: 1px solid #f0f3f5;
+}
+.title { font-size: 1.04rem; font-weight: 900; color: #0f2410; }
+.subtitle { font-size: .9rem; color: #456; }
+
+.main {
+  padding: 10px 12px calc(env(safe-area-inset-bottom, 0) + 64px);
+  overflow: auto;
+  display: grid;
+  gap: 12px;
+}
+
+/* Card genérica */
+.card {
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(0,0,0,.06);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+.cardTitle {
+  font-weight: 900;
+  color: #0f2410;
+  font-size: .98rem;
+}
+
+/* Avatar + identidad */
+.rowA {
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  gap: 12px;
+}
+.avatar {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  display: grid; place-items: center;
+  background: #e8f5e9;
+  color: #1b5e20;
+  border: 1px solid #cde9d0;
+  font-weight: 900; font-size: 1.1rem;
+}
+.idInfo { display: grid; gap: 2px; }
+.nameStrong { font-weight: 900; color: #0f2410; }
+.userMeta { font-size: .86rem; color: #456; }
+
+/* Campos */
+.field { display: grid; gap: 4px; }
+.label { font-size: .86rem; color: #345; }
+.input {
+  border: 1px solid #e6edf0; border-radius: 10px; padding: 8px 10px;
+  font-size: .95rem; outline: none;
+}
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.actions { display: grid; grid-auto-flow: column; gap: 10px; justify-content: end; }
+.actionsRight { display: grid; justify-content: end; }
+
+.saveBtn {
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(180deg, #2e7d32, #1b5e20);
+  border: 1px solid #1b5e20;
+  box-shadow: 0 8px 22px rgba(27,94,32,.18);
+}
+.primaryBtn {
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(180deg, #2e7d32, #1b5e20);
+  border: 1px solid #1b5e20;
+  box-shadow: 0 8px 22px rgba(27,94,32,.18);
+}
+.linkBtn {
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 900;
+  color: #1b5e20;
+  background: #f0fff0;
+  border: 1px solid #cde9d0;
+}
+
+/* Dirección actual */
+.addrBox {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 8px; align-items: center;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid #e6edf0;
+  background: linear-gradient(135deg, #e8f5e9 0%, #f5fff6 100%);
+}
+.addrPin { font-size: 1.1rem; }
+.addrText { color: #163; }
+
+/* Password */
+.chk { display: grid; grid-auto-flow: column; gap: 8px; align-items: center; color: #234; }
+.note { font-size: .8rem; color: #567; }

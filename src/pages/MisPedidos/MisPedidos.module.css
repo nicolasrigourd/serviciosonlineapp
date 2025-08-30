@@ -1,0 +1,82 @@
+.screen {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr auto; /* header | main | bottomnav */
+  background: #fff;
+  overflow: hidden;
+}
+
+/* lo demás queda igual */
+
+
+.header {
+  display: grid;
+  gap: 8px;
+  padding: 10px 14px 6px;
+}
+.title { font-size: 1.05rem; font-weight: 900; color: #0f2410; }
+
+.tabs { display: grid; grid-auto-flow: column; gap: 8px; }
+.tab {
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid #e6edf0;
+  background: #f6f8fa;
+  color: #234;
+  font-weight: 800;
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 8px;
+  align-items: center;
+}
+.tabActive {
+  background: #e8f5e9;
+  border-color: #dcedc8;
+  color: #1b5e20;
+}
+.ct {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #e6edf0;
+  font-size: .78rem;
+}
+
+.main {
+  padding: 8px 12px 12px;
+  overflow: auto;
+}
+
+.list {
+  display: grid;
+  gap: 10px;
+}
+
+/* Empty state */
+.empty { display: grid; place-items: center; padding: 16px; }
+.emptyCard {
+  border: 1px solid #e6edf0;
+  border-radius: 14px;
+  padding: 16px;
+  background: #fafcfd;
+  display: grid;
+  gap: 8px;
+  text-align: center;
+  max-width: 420px;
+}
+.emptyTitle { font-weight: 900; color: #0f2410; }
+.emptyText { color: #345; }
+
+.primaryBtn {
+  padding: 10px;
+  border-radius: 12px;
+  font-weight: 800;
+  background: linear-gradient(180deg, #2e7d32, #1b5e20);
+  color: #fff;
+  border: 1px solid #1b5e20;
+  box-shadow: 0 6px 14px rgba(27,94,32,.18);
+}

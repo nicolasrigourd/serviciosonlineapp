@@ -1,0 +1,49 @@
+/* src/styles/globals.css */
+
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Fuente general */
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-size: 16px;
+  background-color: #f9f9f9; /* fondo claro por defecto */
+  color: #222;              /* texto base */
+  height: 100%;
+  width: 100%;
+}
+
+/* Quitar subrayado a links por defecto */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Inputs y botones consistentes */
+input, button, select, textarea {
+  font-family: inherit;
+  font-size: 1rem;
+  outline: none;
+  border: none;
+}
+
+/* Botón base */
+button {
+  cursor: pointer;
+  background-color: #4CAF50;
+  color: white;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+button:hover {
+  background-color: #43a047;
+}
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}

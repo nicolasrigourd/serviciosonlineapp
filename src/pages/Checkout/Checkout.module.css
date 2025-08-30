@@ -1,0 +1,187 @@
+/* Pantalla: header | contenido | progressDock | footer */
+.screen {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+/* Header */
+.header {
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 6px;
+}
+.title {
+  font-size: clamp(1rem, 3vw, 1.08rem);
+  font-weight: 900;
+  color: #0f2410;
+}
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f2fff4;
+  color: #1b5e20;
+  border: 1px solid #dcedc8;
+  font-weight: 800;
+  font-size: .74rem;
+}
+
+/* Main (cards compactas, scroll interno si excede) */
+.main {
+  padding: 6px 12px 8px;
+  display: grid;
+  gap: 8px;
+  grid-template-rows: minmax(0, 1fr) minmax(0, .85fr) minmax(0, .9fr);
+  overflow: hidden;
+}
+.card {
+  border: 1px solid #e6edf0;
+  border-radius: 14px;
+  background: #fafcfd;
+  padding: 10px 12px;
+  box-shadow: 0 6px 14px rgba(0,0,0,.04);
+  display: grid;
+  gap: 6px;
+  min-height: 0;
+  overflow: auto;
+}
+.cardTitle { font-weight: 800; font-size: .95rem; color: #0f2410; }
+
+.kv { display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center; }
+.k  { font-size: .82rem; color: #567; }
+.v  { font-size: .94rem; color: #0f2410; word-break: break-word; }
+
+.totalRow { border-top: 1px solid #eef2f5; padding-top: 6px; }
+.total { font-weight: 900; color: #1b5e20; font-size: 1.08rem; }
+
+.bullets { margin: 0; padding-left: 18px; color: #233; }
+.bullets li { margin: 2px 0; font-size: .92rem; }
+
+.cardStats { padding-top: 8px; }
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.stat {
+  background: #ffffff;
+  border: 1px solid #e6edf0;
+  border-radius: 12px;
+  padding: 8px;
+  text-align: center;
+}
+.statNum { font-weight: 900; font-size: 1.02rem; color: #1b5e20; }
+.statLbl { font-size: .78rem; color: #567; }
+
+/* ===== Progress Dock (oscuro) ===== */
+.progressDock {
+  background: radial-gradient(120% 110% at 100% 0%, rgba(16,36,18,0.9), rgba(8,18,10,0.96));
+  color: #e7ffe9;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 10px 12px 12px;
+  display: grid;
+  gap: 8px;
+  box-shadow: 0 -16px 40px rgba(0,0,0,.25) inset, 0 -10px 30px rgba(0,0,0,.18);
+}
+.progressDockEmpty { padding: 6px 12px; }
+
+.reassure {
+  font-size: .86rem;
+  color: #cfead1;
+  opacity: .95;
+}
+
+/* Fade helpers */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade { animation: fadeIn .4s ease both; }
+.fadeOnMount { animation: fadeIn .6s ease .1s both; }
+
+.progressBar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.12);
+}
+.progressIndeterminate {
+  width: 38%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(205,238,216,.5), #76ff94, rgba(205,238,216,.5));
+  background-size: 220% 100%;
+  animation: slide 2.6s infinite linear; /* lenta */
+  border-radius: 999px;
+  filter: drop-shadow(0 0 6px rgba(118,255,148,.4));
+}
+@keyframes slide {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(260%); }
+}
+
+.progressMsg {
+  font-size: .88rem;
+  color: #dbffe1;
+  opacity: .95;
+}
+
+/* Footer */
+.footer {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px 14px;
+  border-top: 1px solid #eef2f5;
+  background: #fff;
+}
+.secondaryBtn {
+  padding: 10px;
+  border-radius: 12px;
+  font-weight: 800;
+  background: #f3f5f7;
+  color: #223;
+  border: 1px solid #e6eaef;
+}
+.primaryBtn {
+  padding: 10px;
+  border-radius: 12px;
+  font-weight: 800;
+  background: linear-gradient(180deg, #2e7d32, #1b5e20);
+  color: #fff;
+  border: 1px solid #1b5e20;
+  box-shadow: 0 6px 14px rgba(27,94,32,.18);
+}
+
+/* Estado vacío */
+.mainEmpty {
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.emptyCard {
+  border: 1px solid #e6edf0;
+  border-radius: 14px;
+  padding: 16px;
+  background: #fafcfd;
+  display: grid;
+  gap: 8px;
+  text-align: center;
+  max-width: 420px;
+}
+.emptyTitle { font-weight: 900; color: #0f2410; }
+.emptyText { color: #345; }
+
+/* Ajustes pantallas bajas */
+@media (max-height: 680px) {
+  .main { gap: 6px; }
+  .card { padding: 8px 10px; }
+  .statNum { font-size: .98rem; }
+  .progressMsg, .reassure { font-size: .84rem; }
+}

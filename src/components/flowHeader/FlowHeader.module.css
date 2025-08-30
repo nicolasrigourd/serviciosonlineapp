@@ -1,0 +1,30 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: 56px;
+  padding: 0 10px;
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+
+.iconBtn {
+  height: 36px; width: 36px;
+  display: grid; place-items: center;
+  border: none; background: transparent; color: #2e7d32;
+  border-radius: 10px; cursor: pointer;
+  transition: background .15s ease, transform .06s ease;
+}
+.iconBtn:hover { background: rgba(46,125,50,0.08); }
+.iconBtn:active { transform: translateY(1px); }
+
+.title {
+  text-align: center;
+  font-weight: 800;
+  color: #1b5e20;
+  letter-spacing: .2px;
+}
+.rightSpacer { width: 36px; }

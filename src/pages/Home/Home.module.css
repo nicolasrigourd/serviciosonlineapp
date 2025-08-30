@@ -1,0 +1,153 @@
+/* Pantalla: reparte Navbar | main | BottomNav y evita scroll global */
+.screen {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: #fff;
+  overflow: hidden;
+}
+
+/* Tu main (local a Home). No scrollea: el encuadre es interno */
+.main {
+  padding: 10px 12px 0;
+  display: grid;
+  gap: 10px;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  overflow: hidden; /* evita scroll global */
+  min-height: 0;    /* permite que el hijo con 1fr funcione */
+}
+
+/* Encadre interno SOLO para Home: 4 filas (auto, auto, auto, 1fr) */
+.homeLayout {
+  display: grid;
+  grid-template-rows: auto auto auto 1fr; /* Dirección | Banner | Carrusel | Cards */
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
+}
+
+/* Wrapper de bloques */
+.section { width: 100%; margin: 0; }
+
+/* === (1) Dirección actual === */
+.addrBtn {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 26px 1fr 18px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 12px;
+  padding: 8px 10px;
+  border: 1px solid #c8e6c9;
+  background: linear-gradient(135deg, #e8f5e9 0%, #f5fff6 100%);
+  color: #1b5e20;
+  text-align: left;
+  cursor: pointer;
+  transition: filter .15s ease, transform .06s ease;
+}
+.addrBtn:hover { filter: brightness(1.02); }
+.addrBtn:active { transform: translateY(1px); }
+.addrIcon { display: grid; place-items: center; color: #2e7d32; }
+.addrText { font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.addrText strong { font-weight: 800; margin-right: 6px; }
+.addrChevron { display: grid; place-items: center; color: #2e7d32; }
+
+/* === (2) Banner === */
+.hero {
+  position: relative;
+  border-radius: 12px;
+  padding: 8px 10px 26px;
+  background: linear-gradient(135deg, #e8f5e9 0%, #f5fff6 100%);
+  border: 1px solid #e6f2e6;
+  overflow: hidden;
+}
+.hero::after {
+  content: "";
+  position: absolute; right: -30px; top: -30px;
+  width: 90px; height: 90px;
+  background: radial-gradient(closest-side, rgba(76,175,80,0.12), transparent);
+  filter: blur(1.5px);
+  transform: rotate(16deg);
+}
+.heroContent { display: grid; gap: 0px; }
+.heroTitle { font-size: .95rem; font-weight: 800; color: #1b5e20; letter-spacing: .2px; }
+.heroText  { color: #2e7d32; opacity: .9; font-size: .82rem; }
+.heroBadge {
+  position: absolute; right: 10px; bottom: 8px;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #ffffff; color: #2e7d32;
+  border: 1px solid #dcedc8; border-radius: 999px;
+  padding: 3px 7px; font-weight: 700; font-size: .68rem;
+}
+.dot { width: 6px; height: 6px; background: #43a047; border-radius: 50%; box-shadow: 0 0 6px rgba(67,160,71,0.6); }
+
+/* === (3) Carrusel reducido y consistente === */
+.carousel { display: grid; gap: 6px; }
+.track {
+  width: 100%;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 100%;
+  gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  background: #f8f8f8;
+  scrollbar-width: none;
+}
+.track::-webkit-scrollbar { display: none; }
+
+.slide {
+  scroll-snap-align: start;
+  position: relative;
+  height: clamp(80px, 24vw, 110px);
+}
+.slideImg {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+  border-radius: 12px;
+}
+.dots {
+  display: flex; gap: 6px; justify-content: center; align-items: center;
+  min-height: 10px;
+}
+.dotI { width: 6px; height: 6px; border-radius: 50%; background: #cfd8dc; transition: transform .15s ease, background .15s ease; }
+.dotActive { background: #2e7d32; transform: scale(1.2); }
+
+/* === (4) Zona de cards — SOLO contenedor y distribución === */
+.actionsSection {
+  display: grid;
+  min-height: 0;
+  overflow: hidden;
+}
+.actionsFrame {
+  display: grid;
+  align-content: start;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.actionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  row-gap: 12px;
+  align-content: start;
+  align-items: stretch;
+  grid-auto-flow: row dense;
+  height: 100%;
+  overflow: auto;
+  padding-bottom: 6px;
+}
+@media (min-width: 820px) {
+  .actionsGrid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+}
+
+/* Ajustes para pantallas MUY chicas en altura */
+@media (max-height: 700px) {
+  .slide { height: clamp(72px, 22vw, 96px); }
+}

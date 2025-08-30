@@ -1,0 +1,194 @@
+/* === Card Direcciones — versión “wow” (sin composes) === */
+
+:root {
+  /* Paleta */
+  --green-50: #ecfdf3;
+  --green-200: #bbf7d0;
+  --green-400: #34d399;
+  --green-600: #059669;
+
+  --amber-50: #fff8eb;
+  --amber-200: #fde68a;
+  --amber-400: #f59e0b;
+  --amber-700: #b45309;
+
+  --ink-900: #0b1220;
+  --ink-700: #1c2a3a;
+  --ink-600: #223247;
+  --ink-400: #5b6b7f;
+
+  --shadow-1: 0 4px 18px rgba(10, 20, 30, .10);
+  --shadow-2: 0 12px 28px rgba(10, 20, 30, .16);
+  --shadow-inset: 0 1px 0 rgba(255,255,255,.6) inset;
+}
+
+.card {
+  position: relative;
+  border-radius: 16px;
+  display: grid;
+  grid-template-rows: auto auto auto; /* head | body | foot */
+  gap: 8px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,.86);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(18, 28, 45, .06);
+  box-shadow: var(--shadow-1), var(--shadow-inset);
+  transition: transform .14s ease, box-shadow .18s ease, border-color .18s ease, background .2s ease;
+  overflow: hidden;
+}
+
+.card::before {
+  /* Banda de acento izquierda */
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6px;
+  border-top-left-radius: 16px;
+  border-bottom-left-radius: 16px;
+  transition: width .2s ease;
+}
+.card:hover { transform: translateY(-2px); box-shadow: var(--shadow-2), var(--shadow-inset); }
+.card:active { transform: translateY(0); }
+
+/* Tonos por estado */
+.isCurrent {
+  background:
+    linear-gradient(180deg, rgba(236, 253, 243, .92), rgba(255,255,255,.9));
+  border-color: rgba(5, 150, 105, .18);
+}
+.isCurrent::before {
+  background: linear-gradient(180deg, var(--green-400), var(--green-600));
+}
+
+.isOther {
+  background:
+    linear-gradient(180deg, rgba(255, 248, 235, .92), rgba(255,255,255,.9));
+  border-color: rgba(245, 158, 11, .18);
+}
+.isOther::before {
+  background: linear-gradient(180deg, var(--amber-400), var(--amber-700));
+}
+
+.card:hover::before { width: 8px; }
+
+/* ===== Header ===== */
+.head { display: grid; }
+.titleWrap {
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: start;
+  gap: 10px;
+}
+.pin {
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border-radius: 10px;
+  background: rgba(255,255,255,.6);
+  box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 2px 8px rgba(10,20,30,.06);
+  color: var(--ink-700);
+  font-size: 1.05rem;
+}
+.isCurrent .pin { color: var(--green-600); background: rgba(236, 253, 243, .8); }
+.isOther   .pin { color: var(--amber-700); background: rgba(255, 248, 235, .8); }
+
+.title {
+  font-size: 1.02rem;
+  font-weight: 900;
+  letter-spacing: .2px;
+  color: var(--ink-900);
+}
+
+.badge {
+  margin-left: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: .72rem;
+  letter-spacing: .3px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.7) inset;
+  border: 1px solid transparent;
+}
+.isCurrent .badge {
+  background: rgba(236, 253, 243, .95);
+  color: var(--green-700);
+  border-color: rgba(5, 150, 105, .25);
+}
+
+/* ===== Body ===== */
+.body { display: grid; gap: 4px; }
+.address {
+  color: var(--ink-700);
+  font-size: .95rem;
+  line-height: 1.25;
+}
+.subtitle {
+  color: var(--ink-400);
+  font-size: .84rem;
+}
+
+/* ===== Footer ===== */
+.foot {
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 2px;
+}
+.leftActions, .rightActions { display: grid; grid-auto-flow: column; gap: 8px; }
+
+/* ===== Botones (premium) — sin composes ===== */
+.btnPrimary,
+.btnSelect,
+.btnGhost,
+.btnDanger {
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-weight: 900;
+  font-size: .86rem;
+  letter-spacing: .2px;
+  border: 1px solid transparent;
+  transition: transform .05s ease, filter .15s ease, box-shadow .15s ease, border-color .15s ease;
+  box-shadow: 0 1px 0 rgba(255,255,255,.65) inset, 0 6px 14px rgba(10,20,30,.08);
+}
+.btnPrimary:active,
+.btnSelect:active,
+.btnGhost:active,
+.btnDanger:active { transform: translateY(1px); }
+
+/* Primario */
+.btnPrimary {
+  background: linear-gradient(180deg, var(--green-400), var(--green-600));
+  color: #fff;
+  border-color: rgba(5, 150, 105, .4);
+}
+.btnPrimary:hover { filter: brightness(1.02); }
+
+/* Seleccionar (tono ámbar) */
+.btnSelect {
+  background: linear-gradient(180deg, #ffe7c2, #ffd08a);
+  color: #6a4000;
+  border-color: rgba(245, 158, 11, .35);
+}
+.btnSelect:hover { filter: brightness(1.02); }
+
+/* Secundario gris */
+.btnGhost {
+  background: linear-gradient(180deg, #f8fafc, #eef2f7);
+  color: var(--ink-700);
+  border-color: rgba(15, 23, 42, .08);
+}
+
+/* Peligro */
+.btnDanger {
+  background: linear-gradient(180deg, #ffe0e0, #ffc7c7);
+  color: #7a1b1b;
+  border-color: rgba(190, 18, 60, .28);
+}
+
+/* ===== Accesibilidad / Motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  .card, .card::before,
+  .btnPrimary, .btnSelect, .btnGhost, .btnDanger { transition: none; }
+}

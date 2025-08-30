@@ -1,0 +1,125 @@
+/* Safe-area + degradado verde */
+.wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding-top: env(safe-area-inset-top, 0);
+  background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+  color: #fff;
+}
+
+/* Fila principal (hamburguesa | saludo | logout) */
+.header {
+  height: 56px;
+  padding: 0 12px;
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+}
+
+/* Botones de icono */
+.iconBtn {
+  height: 36px;
+  width: 36px;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: transparent;
+  color: #fff;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .15s ease, transform .06s ease;
+}
+.iconBtn:hover { background: rgba(255,255,255,0.12); }
+.iconBtn:active { transform: translateY(1px); }
+
+/* Saludo centrado */
+.centerText {
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: .2px;
+  font-size: 1.02rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Menú desplegable */
+.menu {
+  height: 0;
+  overflow: hidden;
+  background: #ffffff;
+  color: #111;
+  opacity: 0;
+  border-bottom: 1px solid transparent;
+  transition: height .28s ease, opacity .22s ease;
+}
+.menuOpen {
+  height: 230px;
+  opacity: 1;
+  border-bottom: 1px solid #eee;
+}
+.menuList {
+  list-style: none;
+  margin: 0;
+  padding: 10px 12px 12px;
+  display: grid;
+  gap: 6px;
+}
+.menuItem a {
+  display: block;
+  padding: 10px 10px;
+  border-radius: 10px;
+  color: #111;
+  text-decoration: none;
+  font-weight: 600;
+  background: #f7f7f7;
+  transition: background .15s ease, transform .06s ease;
+}
+.menuItem a:hover { background: #efefef; }
+.menuItem a:active { transform: translateY(1px); }
+
+/* Backdrop del menú */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  top: calc(56px + env(safe-area-inset-top, 0));
+  background: rgba(0,0,0,0.08);
+  border: none;
+  padding: 0;
+  margin: 0;
+  z-index: 25;
+}
+
+/* Ajustes responsive */
+@media (min-width: 768px) {
+  .header { height: 60px; }
+  .centerText { font-size: 1.1rem; }
+}
+
+/* === Botones del modal de logout === */
+.modalActions {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btnGhost {
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #333;
+  font-weight: 700;
+}
+
+.btnPrimary {
+  height: 42px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+}
+.btnGhost:active, .btnPrimary:active { transform: translateY(1px); }

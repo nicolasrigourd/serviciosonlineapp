@@ -1,0 +1,167 @@
+/* === Trigger button === */
+.calcBtn {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-weight: 800;
+  border: 1px solid #1b5e20;
+  background: linear-gradient(180deg, #2e7d32, #1b5e20);
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(27,94,32,.28);
+  transition: filter .15s ease, transform .06s ease, box-shadow .15s ease;
+}
+.calcBtn:hover { filter: brightness(1.04); box-shadow: 0 10px 24px rgba(27,94,32,.32); }
+.calcBtn:active { transform: translateY(1px); }
+
+/* === Overlay + blur === */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(2px);
+  z-index: 999;
+}
+
+/* === Sheet === */
+.sheet {
+  position: fixed;
+  left: 0; right: 0; bottom: -100%;
+  z-index: 1000;
+  background:
+    radial-gradient(140% 120% at 100% 0%, rgba(76,175,80,0.10), transparent 40%),
+    #ffffff;
+  border-radius: 16px 16px 0 0;
+  border: 1px solid #e8efe8;
+  box-shadow: 0 -18px 60px rgba(0,0,0,.28);
+  padding: 10px 14px 14px;
+  transition: transform .28s cubic-bezier(.22,.7,.2,1), bottom .28s cubic-bezier(.22,.7,.2,1);
+  transform: translateY(12px);
+  outline: none;
+}
+.open {
+  bottom: 0;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet, .open { transition: none; }
+}
+
+/* Header */
+.header { position: sticky; top: 0; background: transparent; }
+.grabber {
+  width: 46px; height: 5px;
+  background: #e0e0e0; border-radius: 99px;
+  margin: 4px auto 8px;
+}
+.headerRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+.iconBtn {
+  display: grid; place-items: center;
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: #f3f5f7;
+  border: 1px solid #e6eaef;
+  color: #334;
+}
+.iconBtn:hover { filter: brightness(1.02); }
+
+/* Badge de servicio */
+.serviceBadge {
+  display: inline-grid;
+  grid-auto-flow: column;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #dcedc8;
+  background: #f7fff7;
+  color: #1b5e20;
+  font-weight: 800;
+}
+.badgeIcon { display: grid; place-items: center; }
+.badgeText { letter-spacing: .3px; }
+
+/* Body (contenido) */
+.body {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+.item {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #eef1f4;
+  background: #fafcfd;
+}
+.itemIcon {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  display: grid; place-items: center;
+  background: #ecf7ee;
+  color: #2e7d32;
+  border: 1px solid #e1efe3;
+}
+.itemContent { display: grid; gap: 2px; }
+.itemKey { font-size: .78rem; color: #567; }
+.itemVal { font-size: .94rem; color: #0f2410; word-break: break-word; }
+.meta { font-size: .75rem; color: #6b7; margin-top: 2px; }
+
+/* Barra total (sticky) */
+.totalBar {
+  position: sticky;
+  bottom: 64px; /* deja aire si hay bottom nav fijo, ajustá según tu BottomNav */
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-top: 4px;
+  border-radius: 12px;
+  border: 1px solid #e7efe7;
+  background: linear-gradient(180deg, #f7fff8, #ffffff);
+}
+.moneyWrap { display: grid; grid-auto-flow: column; align-items: center; gap: 8px; }
+.moneyIcon {
+  display: grid; place-items: center;
+  width: 28px; height: 28px; border-radius: 999px;
+  background: #e6f5e6; color: #1b5e20; border: 1px solid #d7ebd7;
+}
+.totalLabel { color: #356; font-weight: 700; }
+.totalValue { font-weight: 900; font-size: 1.18rem; color: #1b5e20; }
+
+/* Acciones */
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+.cancelBtn {
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  background: #f3f5f7;
+  border: 1px solid #e6eaef;
+  color: #223;
+}
+.acceptBtn {
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 800;
+  background: linear-gradient(180deg, #1b5e20, #124415);
+  color: #fff;
+  border: 1px solid #0e3a12;
+  box-shadow: 0 6px 14px rgba(27,94,32,.25);
+}
+.acceptBtn:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  filter: grayscale(.2);
+}
