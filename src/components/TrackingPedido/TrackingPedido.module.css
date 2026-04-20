@@ -1,0 +1,294 @@
+.screen {
+  position: relative;
+  min-height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+  background: #eef2f7;
+}
+
+.mapArea {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #e2e8f0, #f8fafc);
+}
+
+.mapPlaceholder {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.mapGrid {
+  position: absolute;
+  inset: -40px;
+  background-image:
+    linear-gradient(rgba(15, 23, 42, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.06) 1px, transparent 1px);
+  background-size: 38px 38px;
+  transform: rotate(-8deg) scale(1.2);
+}
+
+.originMarker,
+.destinationMarker,
+.cadeteMarker {
+  position: absolute;
+  z-index: 2;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+}
+
+.originMarker {
+  top: 24%;
+  left: 18%;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 8px 12px;
+}
+
+.destinationMarker {
+  top: 35%;
+  right: 14%;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 8px 12px;
+}
+
+.cadeteMarker {
+  top: 48%;
+  left: 48%;
+  transform: translate(-50%, -50%);
+  background: #16a34a;
+  color: #ffffff;
+  padding: 10px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cadetePulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #bbf7d0;
+  box-shadow: 0 0 0 0 rgba(187, 247, 208, 0.75);
+  animation: pulseCadete 1.4s infinite;
+}
+
+.mapNotice {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  background: rgba(255, 255, 255, 0.92);
+  color: #334155;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+}
+
+.bottomSheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 28px 28px 0 0;
+  padding: 10px 18px 20px;
+  box-shadow: 0 -18px 45px rgba(15, 23, 42, 0.18);
+  animation: sheetUp 0.28s ease-out;
+}
+
+.handle {
+  width: 44px;
+  height: 5px;
+  border-radius: 999px;
+  background: #cbd5e1;
+  margin: 0 auto 16px;
+}
+
+.statusBlock {
+  margin-bottom: 16px;
+}
+
+.statusLabel {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #16a34a;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.statusTitle {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.35rem;
+  line-height: 1.15;
+}
+
+.statusText {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.cadeteCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 1.15rem;
+  font-weight: 900;
+  flex: 0 0 auto;
+}
+
+.cadeteInfo {
+  min-width: 0;
+  flex: 1;
+}
+
+.cadeteInfo h2 {
+  margin: 0;
+  font-size: 1rem;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cadeteInfo p {
+  margin: 3px 0 0;
+  color: #64748b;
+  font-size: 0.84rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.orderInfo {
+  display: grid;
+  gap: 9px;
+  margin-bottom: 16px;
+}
+
+.orderInfo div {
+  display: grid;
+  gap: 2px;
+}
+
+.orderInfo span {
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.orderInfo strong {
+  color: #1e293b;
+  font-size: 0.9rem;
+  line-height: 1.25;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.primaryBtn,
+.secondaryBtn {
+  border: none;
+  border-radius: 14px;
+  min-height: 44px;
+  padding: 0 14px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  text-decoration: none;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.primaryBtn {
+  flex: 1;
+  background: #16a34a;
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(22, 163, 74, 0.24);
+}
+
+.secondaryBtn {
+  flex: 1;
+  background: #e2e8f0;
+  color: #334155;
+}
+
+@keyframes sheetUp {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulseCadete {
+  0% {
+    box-shadow: 0 0 0 0 rgba(187, 247, 208, 0.75);
+  }
+
+  70% {
+    box-shadow: 0 0 0 12px rgba(187, 247, 208, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(187, 247, 208, 0);
+  }
+}
+
+@media (min-width: 720px) {
+  .bottomSheet {
+    left: 50%;
+    right: auto;
+    width: min(460px, calc(100% - 32px));
+    transform: translateX(-50%);
+    border-radius: 28px;
+    bottom: 18px;
+  }
+}
