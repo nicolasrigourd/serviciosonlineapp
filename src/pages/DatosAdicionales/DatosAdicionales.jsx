@@ -145,6 +145,7 @@ export default function DatosAdicionales() {
       const uid = auth.currentUser?.uid || order.userId || null;
       const payload = {
         ...order,
+         tipoPedido: "local",// agregamos esto momentaneamente para hacer creer que es un pedido lcoal antivo
         customerUid: uid,
         createdAtLocal: order.createdAt || null,
         createdAt: serverTimestamp(),
