@@ -1,21 +1,12 @@
 import React from "react";
 import styles from "./HomeActionCard.module.css";
 
-/**
- * props:
- * - icon: ReactNode
- * - title: string
- * - desc: string
- * - tone?: "blue" | "green" | "orange" | "purple" | "yellow" (accents sutiles)
- * - onClick?: () => void
- * - badge?: string (opcional, ej: "Nuevo")
- * - disabled?: boolean (opcional)
- */
 export default function HomeActionCard({
   icon,
+  image,
   title,
   desc,
-  tone = "blue",
+  tone = "neutral",
   onClick,
   badge,
   disabled = false,
@@ -33,7 +24,15 @@ export default function HomeActionCard({
       disabled={disabled}
     >
       {!!badge && <span className={styles.badge}>{badge}</span>}
-      <span className={`${styles.iconCircle} ${styles[`icon_${tone}`]}`}>{icon}</span>
+
+      <span className={styles.iconStage} aria-hidden="true">
+        {image ? (
+          <img className={styles.serviceImage} src={image} alt="" />
+        ) : (
+          icon
+        )}
+      </span>
+
       <span className={styles.cardTitle}>{title}</span>
       <span className={styles.cardDesc}>{desc}</span>
     </button>

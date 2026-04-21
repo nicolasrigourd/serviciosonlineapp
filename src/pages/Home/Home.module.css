@@ -1,153 +1,416 @@
-/* Pantalla: reparte Navbar | main | BottomNav y evita scroll global */
 .screen {
   height: 100dvh;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  background: #fff;
+  background: #f6f7f8;
   overflow: hidden;
 }
 
-/* Tu main (local a Home). No scrollea: el encuadre es interno */
 .main {
-  padding: 10px 12px 0;
-  display: grid;
-  gap: 10px;
-  max-width: 900px;
   width: 100%;
+  max-width: 920px;
   margin: 0 auto;
-  overflow: hidden; /* evita scroll global */
-  min-height: 0;    /* permite que el hijo con 1fr funcione */
-}
-
-/* Encadre interno SOLO para Home: 4 filas (auto, auto, auto, 1fr) */
-.homeLayout {
-  display: grid;
-  grid-template-rows: auto auto auto 1fr; /* Dirección | Banner | Carrusel | Cards */
-  gap: 10px;
-  height: 100%;
   min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 14px 18px;
+  box-sizing: border-box;
 }
 
-/* Wrapper de bloques */
-.section { width: 100%; margin: 0; }
+.homeLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: auto;
+}
 
-/* === (1) Dirección actual === */
+.section {
+  width: 100%;
+  margin: 0;
+}
+
+/* Dirección actual */
 .addrBtn {
   width: 100%;
+  min-height: 54px;
   display: grid;
-  grid-template-columns: 26px 1fr 18px;
+  grid-template-columns: 36px 1fr 22px;
   align-items: center;
-  gap: 8px;
-  border-radius: 12px;
-  padding: 8px 10px;
-  border: 1px solid #c8e6c9;
-  background: linear-gradient(135deg, #e8f5e9 0%, #f5fff6 100%);
-  color: #1b5e20;
+  gap: 10px;
+
+  border: none;
+  border-radius: 18px;
+  padding: 9px 12px;
+
+  background: #ffffff;
+  color: #111827;
   text-align: left;
   cursor: pointer;
-  transition: filter .15s ease, transform .06s ease;
-}
-.addrBtn:hover { filter: brightness(1.02); }
-.addrBtn:active { transform: translateY(1px); }
-.addrIcon { display: grid; place-items: center; color: #2e7d32; }
-.addrText { font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.addrText strong { font-weight: 800; margin-right: 6px; }
-.addrChevron { display: grid; place-items: center; color: #2e7d32; }
 
-/* === (2) Banner === */
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.addrBtn:active {
+  transform: scale(0.99);
+  background: #f2f3f4;
+}
+
+.addrIcon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: #eef2f3;
+  color: #111827;
+}
+
+.addrText {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  color: #111827;
+  line-height: 1.15;
+}
+
+.addrText strong {
+  display: block;
+  font-size: 0.73rem;
+  font-weight: 850;
+  color: #6b7280;
+}
+
+.addrText span {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.addrChevron {
+  display: grid;
+  place-items: center;
+  color: #111827;
+}
+
+/* Hero */
 .hero {
   position: relative;
-  border-radius: 12px;
-  padding: 8px 10px 26px;
-  background: linear-gradient(135deg, #e8f5e9 0%, #f5fff6 100%);
-  border: 1px solid #e6f2e6;
+  min-height: 124px;
+  border-radius: 26px;
+  padding: 18px;
+
+  background:
+    radial-gradient(circle at 88% 18%, rgba(255, 255, 255, 0.34), transparent 28%),
+    linear-gradient(135deg, #151515 0%, #1f2933 48%, #111827 100%);
+
+  color: #ffffff;
   overflow: hidden;
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.18);
+  box-sizing: border-box;
 }
+
+.hero::before {
+  content: "";
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  right: -54px;
+  bottom: -78px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.26);
+}
+
 .hero::after {
   content: "";
-  position: absolute; right: -30px; top: -30px;
-  width: 90px; height: 90px;
-  background: radial-gradient(closest-side, rgba(76,175,80,0.12), transparent);
-  filter: blur(1.5px);
-  transform: rotate(16deg);
+  position: absolute;
+  right: 24px;
+  top: 18px;
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(34, 197, 94, 0.95), rgba(21, 128, 61, 0.95));
+  transform: rotate(12deg);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
 }
-.heroContent { display: grid; gap: 0px; }
-.heroTitle { font-size: .95rem; font-weight: 800; color: #1b5e20; letter-spacing: .2px; }
-.heroText  { color: #2e7d32; opacity: .9; font-size: .82rem; }
-.heroBadge {
-  position: absolute; right: 10px; bottom: 8px;
-  display: inline-flex; align-items: center; gap: 6px;
-  background: #ffffff; color: #2e7d32;
-  border: 1px solid #dcedc8; border-radius: 999px;
-  padding: 3px 7px; font-weight: 700; font-size: .68rem;
-}
-.dot { width: 6px; height: 6px; background: #43a047; border-radius: 50%; box-shadow: 0 0 6px rgba(67,160,71,0.6); }
 
-/* === (3) Carrusel reducido y consistente === */
-.carousel { display: grid; gap: 6px; }
-.track {
-  width: 100%;
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 100%;
-  gap: 8px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  border-radius: 12px;
-  border: 1px solid #eee;
-  background: #f8f8f8;
-  scrollbar-width: none;
-}
-.track::-webkit-scrollbar { display: none; }
-
-.slide {
-  scroll-snap-align: start;
+.heroContent {
   position: relative;
-  height: clamp(80px, 24vw, 110px);
+  z-index: 2;
+  display: grid;
+  gap: 5px;
+  max-width: 72%;
 }
-.slideImg {
-  width: 100%; height: 100%;
-  object-fit: cover; display: block;
-  border-radius: 12px;
-}
-.dots {
-  display: flex; gap: 6px; justify-content: center; align-items: center;
-  min-height: 10px;
-}
-.dotI { width: 6px; height: 6px; border-radius: 50%; background: #cfd8dc; transition: transform .15s ease, background .15s ease; }
-.dotActive { background: #2e7d32; transform: scale(1.2); }
 
-/* === (4) Zona de cards — SOLO contenedor y distribución === */
-.actionsSection {
-  display: grid;
-  min-height: 0;
-  overflow: hidden;
+.heroKicker {
+  color: #86efac;
+  font-size: 0.72rem;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
-.actionsFrame {
-  display: grid;
-  align-content: start;
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
+
+.heroTitle {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(1.38rem, 6vw, 1.82rem);
+  line-height: 0.98;
+  font-weight: 950;
+  letter-spacing: -0.055em;
 }
+
+.heroText {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.88rem;
+  line-height: 1.25;
+  font-weight: 650;
+}
+
+.heroBadge {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  max-width: 48%;
+  padding: 7px 10px;
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.96);
+  color: #111827;
+
+  font-size: 0.7rem;
+  line-height: 1;
+  font-weight: 900;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16);
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  background: #22c55e;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.16);
+}
+
+/* Servicios */
+.servicesSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.servicesHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 2px;
+}
+
+.servicesTitle {
+  margin: 0;
+  color: #111827;
+  font-size: 1.2rem;
+  line-height: 1.05;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+}
+
+.servicesText {
+  margin: 3px 0 0;
+  color: #6b7280;
+  font-size: 0.82rem;
+  line-height: 1.2;
+  font-weight: 650;
+}
+
+/* Grilla preparada para cards tipo Uber */
 .actionsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 12px;
-  row-gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-content: start;
-  align-items: stretch;
-  grid-auto-flow: row dense;
-  height: 100%;
-  overflow: auto;
-  padding-bottom: 6px;
-}
-@media (min-width: 820px) {
-  .actionsGrid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  gap: 10px;
+
+  height: auto;
+  min-height: auto;
+  overflow: visible;
+
+  padding: 0 0 4px;
+  box-sizing: border-box;
 }
 
-/* Ajustes para pantallas MUY chicas en altura */
+/* Banner inferior */
+.infoBanner {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  align-items: center;
+  gap: 12px;
+
+  border-radius: 20px;
+  padding: 13px;
+
+  background: #ffffff;
+  color: #111827;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+.infoIcon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.infoText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.infoText strong {
+  color: #111827;
+  font-size: 0.9rem;
+  line-height: 1.15;
+  font-weight: 900;
+}
+
+.infoText span {
+  color: #6b7280;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  font-weight: 650;
+}
+
+/* Android chicos / iPhone SE */
+@media (max-width: 360px) {
+  .main {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .homeLayout {
+    gap: 12px;
+  }
+
+  .addrBtn {
+    min-height: 50px;
+    grid-template-columns: 32px 1fr 20px;
+    border-radius: 16px;
+    padding: 8px 10px;
+  }
+
+  .addrIcon {
+    width: 32px;
+    height: 32px;
+    border-radius: 12px;
+  }
+
+  .addrText strong {
+    font-size: 0.68rem;
+  }
+
+  .addrText span {
+    font-size: 0.8rem;
+  }
+
+  .hero {
+    min-height: 112px;
+    padding: 16px;
+    border-radius: 23px;
+  }
+
+  .heroContent {
+    max-width: 70%;
+  }
+
+  .heroTitle {
+    font-size: 1.25rem;
+  }
+
+  .heroText {
+    font-size: 0.8rem;
+  }
+
+  .heroBadge {
+    max-width: 50%;
+    font-size: 0.64rem;
+    padding: 6px 8px;
+  }
+
+  .actionsGrid {
+    gap: 8px;
+  }
+
+  .infoBanner {
+    border-radius: 18px;
+    padding: 11px;
+    grid-template-columns: 38px 1fr;
+  }
+
+  .infoIcon {
+    width: 38px;
+    height: 38px;
+    border-radius: 14px;
+  }
+}
+
+/* Pantallas muy bajas */
 @media (max-height: 700px) {
-  .slide { height: clamp(72px, 22vw, 96px); }
+  .main {
+    padding-top: 8px;
+  }
+
+  .homeLayout {
+    gap: 10px;
+  }
+
+  .hero {
+    min-height: 104px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
+  .heroTitle {
+    font-size: 1.22rem;
+  }
+
+  .heroText {
+    font-size: 0.78rem;
+  }
+
+  .servicesTitle {
+    font-size: 1.08rem;
+  }
+}
+
+/* Pantallas medianas / tablets */
+@media (min-width: 720px) {
+  .main {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .actionsGrid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
 }
