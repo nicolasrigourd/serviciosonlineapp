@@ -1,7 +1,7 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Navbar } from "../../components/Navbar/Navbar";
 import BottomNav from "../../components/BottomNav/BottomNav";
+import ActiveOrderSheet from "../../components/ActiveOrderSheet/ActiveOrderSheet";
 import { useFlow } from "../../state/FlowContext";
 import { useAuth } from "../../state/AuthProvider";
 import styles from "./Home.module.css";
@@ -9,8 +9,11 @@ import HomeActionCard from "../../components/HomeActionCard/HomeActionCard";
 
 export default function Home() {
   const navigate = useNavigate();
+  const auth = useAuth();
+  const { user: ctxUser } = auth || {};
 
-  const { user: ctxUser } = useAuth();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileMenuRef = useRef(null);
 
   const cachedUser = (() => {
     try {
@@ -52,7 +55,29 @@ export default function Home() {
 
   const greeting = user ? `¡Hola, ${user.nombre || user.username}!` : "¡Hola!";
 
+  const avatarLetter =
+    user?.nombre?.charAt(0)?.toUpperCase() ||
+    user?.username?.charAt(0)?.toUpperCase() ||
+    "U";
+
   const { setService, setOrigin } = useFlow();
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target)
+      ) {
+        setProfileOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const pickService = (type, surcharge) => {
     setService(type, surcharge);
@@ -67,7 +92,42 @@ export default function Home() {
     navigate("/flow/enviar");
   };
 
-  const goAddresses = () => navigate("/direcciones");
+  const goAddresses = () => {
+    setProfileOpen(false);
+    navigate("/direcciones");
+  };
+
+  const goProfile = () => {
+    setProfileOpen(false);
+    navigate("/perfil");
+  };
+
+  const handleLogout = async () => {
+    setProfileOpen(false);
+
+    try {
+      if (typeof auth?.logout === "function") {
+        await auth.logout();
+      }
+
+      if (typeof auth?.signOut === "function") {
+        await auth.signOut();
+      }
+
+      if (typeof auth?.logoutUser === "function") {
+        await auth.logoutUser();
+      }
+    } catch (error) {
+      console.error("[HOME] Error al cerrar sesión:", error);
+    }
+
+    localStorage.removeItem("SessionUser");
+    localStorage.removeItem("loggedUser");
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+
+    navigate("/login", { replace: true });
+  };
 
   const actions = [
     {
@@ -117,12 +177,81 @@ export default function Home() {
   ];
 
   return (
-    <div className={styles.screen}>
-      <Navbar greeting={greeting} />
+    <div className={styles.homeRoot}>
+      <main className={styles.homeMain}>
+        <section className={styles.topStage}>
+          <div className={styles.topGlowOne} aria-hidden="true" />
+          <div className={styles.topGlowTwo} aria-hidden="true" />
 
-      <main className={styles.main}>
-        <div className={styles.homeLayout}>
-          <section className={styles.section}>
+          <header className={styles.homeFloatingHeader}>
+            <div className={styles.profileWrapper} ref={profileMenuRef}>
+              <button
+                type="button"
+                className={styles.homeAvatar}
+                onClick={() => setProfileOpen((prev) => !prev)}
+                aria-label="Abrir menú de perfil"
+              >
+                {user?.photoURL ? (
+                  <img src={user.photoURL} alt="Usuario" />
+                ) : (
+                  <span>{avatarLetter}</span>
+                )}
+              </button>
+
+              {profileOpen && (
+                <div className={styles.profileMenu}>
+                  <button type="button" onClick={goProfile}>
+                    <span className={styles.profileMenuIcon}>{userIcon}</span>
+                    <span>Mi perfil</span>
+                  </button>
+
+                  <button type="button" onClick={goAddresses}>
+                    <span className={styles.profileMenuIcon}>{pinIcon}</span>
+                    <span>Mis direcciones</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={styles.logoutOption}
+                    onClick={handleLogout}
+                  >
+                    <span className={styles.profileMenuIcon}>{logoutIcon}</span>
+                    <span>Cerrar sesión</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className={styles.homeHeaderInfo}>
+              <strong>{greeting}</strong>
+              <span>
+                {addrLabel
+                  ? "Tu cadetería online está activa"
+                  : "Elegí una dirección para comenzar"}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              className={styles.homeHeaderAction}
+              onClick={goAddresses}
+            >
+              Mis direcciones
+            </button>
+          </header>
+
+          <div className={styles.topIntro}>
+            <span className={styles.topKicker}>Cadetería online</span>
+            <h1>Pedí tu envío en minutos</h1>
+            <p>
+              Elegí un servicio, confirmá tu dirección y coordinamos el pedido
+              con un cadete disponible.
+            </p>
+          </div>
+        </section>
+
+        <section className={styles.homeContent}>
+          <div className={styles.homeLayout}>
             <button
               type="button"
               className={styles.addrBtn}
@@ -142,62 +271,98 @@ export default function Home() {
                 {chevIcon}
               </span>
             </button>
-          </section>
 
-          <section className={styles.section} aria-label="Mensaje principal">
-            <div className={styles.hero}>
-              <div className={styles.heroContent}>
-                <span className={styles.heroKicker}>Cadetería online</span>
-                <h2 className={styles.heroTitle}>Enviá lo que quieras</h2>
-                <p className={styles.heroText}>
-                  Pedí un cadete en minutos y seguí tu envío desde la app.
-                </p>
+            <section className={styles.carouselSection} aria-label="Promociones">
+              <div className={styles.carouselTrack}>
+                <article className={styles.carouselCard}>
+                  <div>
+                    <span>Rápido y simple</span>
+                    <h2>Enviá documentos, llaves o paquetes chicos</h2>
+                    <p>Ideal para gestiones rápidas dentro de la ciudad.</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => pickService("simple", 0)}
+                  >
+                    Enviar ahora
+                  </button>
+                </article>
+
+                <article className={styles.carouselCard}>
+                  <div>
+                    <span>Delivery</span>
+                    <h2>Retiro y entrega de comidas</h2>
+                    <p>Coordinamos con cadetes disponibles cerca de tu zona.</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => pickService("delivery", 0.07)}
+                  >
+                    Pedir delivery
+                  </button>
+                </article>
+
+                <article className={styles.carouselCard}>
+                  <div>
+                    <span>Seguro</span>
+                    <h2>Envíos de valores o elementos delicados</h2>
+                    <p>Una opción pensada para envíos que requieren cuidado.</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => pickService("valores", 0.2)}
+                  >
+                    Ver opción
+                  </button>
+                </article>
+              </div>
+            </section>
+
+            <section
+              className={styles.homeBottomSheet}
+              aria-label="Tipos de envío"
+            >
+              <div className={styles.homeSheetHandle} />
+
+              <div className={styles.homeSheetHeader}>
+                <div>
+                  <h2>Servicios</h2>
+                  <p>Elegí qué necesitás enviar</p>
+                </div>
               </div>
 
-              <div className={styles.heroBadge}>
-                <span className={styles.dot} aria-hidden="true" />
-                {addrLabel ? "Activo en tu zona" : "Elegí una dirección"}
+              <div className={styles.actionsGrid}>
+                {actions.map((a) => (
+                  <HomeActionCard
+                    key={a.key}
+                    icon={a.icon}
+                    image={a.image}
+                    title={a.title}
+                    desc={a.desc}
+                    tone={a.tone}
+                    badge={a.badge}
+                    onClick={() => pickService(a.key, a.surcharge)}
+                  />
+                ))}
               </div>
-            </div>
-          </section>
+            </section>
 
-          <section className={styles.servicesSection} aria-label="Tipos de envío">
-            <div className={styles.servicesHeader}>
-              <div>
-                <h2 className={styles.servicesTitle}>Servicios</h2>
-                <p className={styles.servicesText}>
-                  Elegí qué necesitás enviar
-                </p>
+            <section className={styles.infoBanner} aria-label="Información">
+              <div className={styles.infoIcon}>{clockIcon}</div>
+
+              <div className={styles.infoText}>
+                <strong>Envíos rápidos y seguros</strong>
+                <span>Coordinamos tu pedido con repartidores disponibles.</span>
               </div>
-            </div>
-
-            <div className={styles.actionsGrid}>
-              {actions.map((a) => (
-                <HomeActionCard
-                  key={a.key}
-                  icon={a.icon}
-                  image={a.image}
-                  title={a.title}
-                  desc={a.desc}
-                  tone={a.tone}
-                  badge={a.badge}
-                  onClick={() => pickService(a.key, a.surcharge)}
-                />
-              ))}
-            </div>
-          </section>
-
-          <section className={styles.infoBanner} aria-label="Información">
-            <div className={styles.infoIcon}>{clockIcon}</div>
-
-            <div className={styles.infoText}>
-              <strong>Envíos rápidos y seguros</strong>
-              <span>Coordinamos tu pedido con repartidores disponibles.</span>
-            </div>
-          </section>
-        </div>
+            </section>
+          </div>
+        </section>
       </main>
 
+      <ActiveOrderSheet />
       <BottomNav />
     </div>
   );
@@ -313,5 +478,34 @@ const clockIcon = (
   >
     <circle cx="12" cy="12" r="9" />
     <path d="M12 7v5l3 2" />
+  </svg>
+);
+
+const userIcon = (
+  <svg
+    viewBox="0 0 24 24"
+    width="17"
+    height="17"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21a8 8 0 0 1 16 0" />
+  </svg>
+);
+
+const logoutIcon = (
+  <svg
+    viewBox="0 0 24 24"
+    width="17"
+    height="17"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <path d="M16 17l5-5-5-5" />
+    <path d="M21 12H9" />
   </svg>
 );

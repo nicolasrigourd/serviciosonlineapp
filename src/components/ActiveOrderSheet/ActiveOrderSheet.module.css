@@ -1,0 +1,283 @@
+/* src/components/ActiveOrderSheet/ActiveOrderSheet.module.css */
+
+.sheet {
+  position: relative;
+  z-index: 20;
+
+  width: calc(100% - 28px);
+  max-width: 920px;
+  margin: -4px auto 8px;
+  padding: 9px 14px 14px;
+
+  border-radius: 24px 24px 18px 18px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 18px 42px rgba(17, 24, 39, 0.14);
+  box-sizing: border-box;
+}
+
+.handle {
+  width: 42px;
+  height: 5px;
+  border-radius: 999px;
+  background: #d1d5db;
+  margin: 0 auto 11px;
+}
+
+/* ===============================
+   EMPTY STATE
+   =============================== */
+
+.emptyState {
+  min-height: 68px;
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.emptyIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 17px;
+  display: grid;
+  place-items: center;
+  background: #f3f4f6;
+}
+
+.emptyIcon span {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #9ca3af;
+  box-shadow: 0 0 0 6px rgba(156, 163, 175, 0.15);
+}
+
+.emptyText {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.emptyText strong {
+  color: #111827;
+  font-size: 0.95rem;
+  line-height: 1.15;
+  font-weight: 950;
+}
+
+.emptyText span {
+  color: #6b7280;
+  font-size: 0.78rem;
+  line-height: 1.25;
+  font-weight: 650;
+}
+
+/* ===============================
+   PEDIDO ACTIVO
+   =============================== */
+
+.statusHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.kicker {
+  display: inline-flex;
+  color: #15803d;
+  font-size: 0.68rem;
+  line-height: 1;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 5px;
+}
+
+.statusHeader h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 1.08rem;
+  line-height: 1.1;
+  font-weight: 1000;
+  letter-spacing: -0.035em;
+}
+
+.liveBadge {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.68rem;
+  line-height: 1;
+  font-weight: 950;
+}
+
+.cadeteCard {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 10px;
+
+  border-radius: 20px;
+  padding: 10px;
+  background: #f3f4f6;
+  margin-bottom: 10px;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 17px;
+  display: grid;
+  place-items: center;
+  background: #111827;
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 950;
+}
+
+.cadeteInfo {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.cadeteInfo strong {
+  color: #111827;
+  font-size: 0.9rem;
+  line-height: 1.15;
+  font-weight: 950;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cadeteInfo span {
+  color: #6b7280;
+  font-size: 0.75rem;
+  line-height: 1.15;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cadeteBadge {
+  border-radius: 999px;
+  padding: 7px 9px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 0.68rem;
+  line-height: 1;
+  font-weight: 900;
+  box-shadow: 0 8px 18px rgba(17, 24, 39, 0.06);
+}
+
+.orderInfo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.orderInfo div {
+  min-width: 0;
+  border-radius: 17px;
+  padding: 10px;
+  background: #f9fafb;
+  display: grid;
+  gap: 4px;
+}
+
+.orderInfo span {
+  color: #6b7280;
+  font-size: 0.68rem;
+  line-height: 1;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.orderInfo strong {
+  color: #111827;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  font-weight: 900;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.primaryBtn {
+  width: 100%;
+  min-height: 46px;
+  border: none;
+  border-radius: 17px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 950;
+  cursor: pointer;
+  box-shadow: 0 14px 28px rgba(17, 24, 39, 0.18);
+}
+
+.primaryBtn:active {
+  transform: scale(0.985);
+}
+
+/* ===============================
+   RESPONSIVE
+   =============================== */
+
+@media (max-width: 390px) {
+  .sheet {
+    width: calc(100% - 20px);
+    padding: 8px 12px 12px;
+    border-radius: 22px 22px 18px 18px;
+  }
+
+  .emptyText strong {
+    font-size: 0.9rem;
+  }
+
+  .emptyText span {
+    font-size: 0.74rem;
+  }
+
+  .orderInfo {
+    grid-template-columns: 1fr;
+  }
+
+  .cadeteCard {
+    grid-template-columns: 42px 1fr auto;
+  }
+
+  .avatar {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+@media (max-height: 700px) {
+  .sheet {
+    padding-top: 8px;
+    padding-bottom: 12px;
+  }
+
+  .emptyState {
+    min-height: 58px;
+  }
+
+  .orderInfo {
+    display: none;
+  }
+
+  .cadeteCard {
+    margin-bottom: 10px;
+  }
+}
