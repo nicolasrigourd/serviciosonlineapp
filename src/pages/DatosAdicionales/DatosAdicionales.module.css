@@ -1,4 +1,4 @@
-/* Pantalla mobile-first: header arriba, contenido scrolleable y footer fijo */
+/* Pantalla mobile-first: header arriba, contenido scrolleable y footer abajo */
 .screen {
   min-height: 100dvh;
   background: #ffffff;
@@ -46,7 +46,7 @@
   text-overflow: ellipsis;
 }
 
-/* Contenido principal: un solo scroll, no scroll interno por card */
+/* Contenido principal: un solo scroll */
 .main {
   flex: 1 1 auto;
   min-height: 0;
@@ -57,7 +57,7 @@
   flex-direction: column;
   gap: 12px;
 
-  padding: 12px 14px calc(104px + env(safe-area-inset-bottom));
+  padding: 12px 14px 18px;
 }
 
 /* Tarjetas */
@@ -74,6 +74,7 @@
   gap: 12px;
 
   overflow: visible;
+  box-sizing: border-box;
 }
 
 .cardTitle {
@@ -112,6 +113,7 @@
   border-radius: 14px;
   background: #ffffff;
   border: 1px solid #eef2f5;
+  box-sizing: border-box;
 }
 
 .key {
@@ -185,13 +187,9 @@
   color: #93a3ad;
 }
 
-/* Footer fijo inferior */
+/* Footer normal: queda abajo del formulario, no flotante */
 .footer {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 20;
+  flex: 0 0 auto;
 
   display: grid;
   grid-template-columns: 0.9fr 1.4fr;
@@ -200,9 +198,8 @@
 
   padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
   border-top: 1px solid #eef2f5;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(14px);
-  box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  box-sizing: border-box;
 }
 
 .priceWrap {
@@ -312,7 +309,7 @@
   }
 }
 
-/* Pantallas medianas: algunos Android grandes / iPhone Pro Max horizontal o web */
+/* Pantallas medianas / web */
 @media (min-width: 720px) {
   .main {
     width: min(760px, 100%);
@@ -322,12 +319,10 @@
   }
 
   .footer {
-    left: 50%;
-    transform: translateX(-50%);
     width: min(760px, 100%);
+    margin: 0 auto;
     border-left: 1px solid #eef2f5;
     border-right: 1px solid #eef2f5;
-    border-radius: 22px 22px 0 0;
   }
 
   .row2col {
