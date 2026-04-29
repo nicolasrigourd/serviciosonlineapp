@@ -1,169 +1,44 @@
-/*
-// src/state/FlowContext.jsx
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const FlowContext = createContext(null);
+
 const STORAGE_KEY = "FlowEnviarState";
 const PEDIDOS_KEY = "PedidosApp";
 const PEDIDO_ACTUAL_KEY = "NuevoPedido";
 
 const initialState = {
-  // Dirección y destino (strings + coords opcionales)
-  origin: "",
-  originCoords: null,       // { lat, lng } | null
-  destination: "",
-  destinationCoords: null,  // { lat, lng } | null
-
-  // Info paquete/servicio
-  size: "chico",
-  serviceType: "",          // "simple" | "box" | ...
-  surcharge: 0,             // porcentaje o coef (ej 0.12)
-  km: 0,
-  price: 0,                 // total calculado
-
-  // Notas y contactos
-  notesFrom: "",
-  notesTo: "",
-  contactFrom: "",
-  contactTo: "",
-};
-
-export function FlowProvider({ children }) {
-  const [state, setState] = useState(() => {
-    try {
-      const raw = sessionStorage.getItem(STORAGE_KEY);
-      return raw ? { ...initialState, ...JSON.parse(raw) } : initialState;
-    } catch {
-      return initialState;
-    }
-  });
-
-  // Persistencia en sessionStorage
-  useEffect(() => {
-    try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
-  }, [state]);
-
-  // ==== Helpers internos de storage de pedidos ====
-  function appendPedido(order) {
-    try {
-      const raw = localStorage.getItem(PEDIDOS_KEY);
-      const arr = raw ? JSON.parse(raw) : [];
-      arr.unshift(order); // más reciente primero
-      localStorage.setItem(PEDIDOS_KEY, JSON.stringify(arr));
-    } catch {}
-  }
-
-  function savePedidoActual(order) {
-    try { localStorage.setItem(PEDIDO_ACTUAL_KEY, JSON.stringify(order)); } catch {}
-  }
-
-  // ==== API expuesta al app ====
-  const api = useMemo(() => ({
-    state,
-
-    // setters existentes (compat)
-    setOrigin: (text, coords = null) =>
-      setState((s) => ({ ...s, origin: text, originCoords: coords })),
-    setDestination: (text, coords = null) =>
-      setState((s) => ({ ...s, destination: text, destinationCoords: coords })),
-    setSize: (v) => setState((s) => ({ ...s, size: v })),
-    setNotes: (v) => setState((s) => ({ ...s, notesTo: v })), // compat con tu viejo "notes"
-    setContact: (v) => setState((s) => ({ ...s, contactTo: v })), // compat con tu viejo "contact"
-    setKm: (v) => setState((s) => ({ ...s, km: Number(v) || 0 })),
-
-    // nuevos setters más expresivos
-    setNotesFrom: (v) => setState((s) => ({ ...s, notesFrom: v })),
-    setNotesTo: (v) => setState((s) => ({ ...s, notesTo: v })),
-    setContactFrom: (v) => setState((s) => ({ ...s, contactFrom: v })),
-    setContactTo: (v) => setState((s) => ({ ...s, contactTo: v })),
-
-    // tipo de servicio y precio
-    setService: (type, surcharge = 0) =>
-      setState((s) => ({ ...s, serviceType: type, surcharge: Number(surcharge) || 0 })),
-    setPrice: (amount) =>
-      setState((s) => ({ ...s, price: Number(amount) || 0 })),
-
-    // armar snapshot de pedido listo para guardar/subir
-    buildOrder: (sessionUser) => {
-      const su = sessionUser || (() => {
-        try { return JSON.parse(localStorage.getItem("SessionUser") || "null"); } catch { return null; }
-      })();
-
-      return {
-        id: `ORD-${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        userId: su?.id || null,
-        userName: su ? `${su.nombre || ""} ${su.apellido || ""}`.trim() : "",
-        serviceType: state.serviceType || "simple",
-        surcharge: Number(state.surcharge) || 0,
-        origin: state.origin,
-        originCoords: state.originCoords,
-        destination: state.destination,
-        destinationCoords: state.destinationCoords,
-        km: Number(state.km) || 0,
-        price: Number(state.price) || 0,
-        size: state.size,
-        notesFrom: state.notesFrom || "",
-        notesTo: state.notesTo || "",
-        contactFrom: state.contactFrom || (su?.telefono || ""),
-        contactTo: state.contactTo || "",
-        unitPrice: 1000, // mock actual
-        status: "pendiente", // 👈 cambio clave: coincide con MisPedidos (EN CURSO)
-      };
-    },
-
-    // guardar en LocalStorage: historial + pedido actual
-    saveOrder: (order) => {
-      if (!order) return;
-      appendPedido(order);
-      savePedidoActual(order);
-    },
-
-    // reset del flow (por ejemplo, al finalizar o cancelar)
-    reset: () => setState(initialState),
-  }), [state]);
-
-  return <FlowContext.Provider value={api}>{children}</FlowContext.Provider>;
-}
-
-export function useFlow() {
-  const ctx = useContext(FlowContext);
-  if (!ctx) throw new Error("useFlow debe usarse dentro de <FlowProvider>");
-  return ctx;
-}
-*/
-// src/state/FlowContext.jsx
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-
-const FlowContext = createContext(null);
-const STORAGE_KEY = "FlowEnviarState";
-const PEDIDOS_KEY = "PedidosApp";
-const PEDIDO_ACTUAL_KEY = "NuevoPedido";
-
-const initialState = {
-  // Dirección y destino (texto + coords enriquecidas)
+  // Dirección y destino
   origin: "",
   originCoords: null,       // { lat, lng, placeId } | null
   destination: "",
   destinationCoords: null,  // { lat, lng, placeId } | null
 
-  // Info paquete/servicio
+  // Servicio
   size: "chico",
-  serviceType: "",          // "simple" | "box" | "bigbox" | ...
-  surcharge: 0,             // porcentaje/coef (ej 0.12)
+  serviceType: "simple",    // "simple" | "box" | "bigbox" | ...
+  surcharge: 0,
 
-  // Distancia y precio
+  // Distancia y cotización
   km: 0,
   price: 0,
-  breakdown: null,          // { base, perKm, surchargeAmt, minApplied, subtotal, total }
-  quotedAt: null,           // timestamp ms
+  breakdown: null,
+  quotedAt: null,
 
-  // Notas y contactos
+  // Contactos y notas
   notesFrom: "",
   notesTo: "",
   contactFrom: "",
   contactTo: "",
-  dropoffApt: "",           // Piso / Dpto del destino
+  dropoffApt: "",
+
+  // Destinatario
+  recipientName: "",
+  recipientPhone: "",
+
+  // Contrato operativo básico
+  paymentMethod: "cash",           // "cash" | "digital"
+  allowsFallbackToLocal: true,
+  priority: "normal",              // "normal" | "high"
 };
 
 export function FlowProvider({ children }) {
@@ -176,60 +51,67 @@ export function FlowProvider({ children }) {
     }
   });
 
-  // Persistencia en sessionStorage
   useEffect(() => {
-    try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {}
   }, [state]);
 
-  // ==== Helpers internos de storage de pedidos ====
   function appendPedido(order) {
     try {
       const raw = localStorage.getItem(PEDIDOS_KEY);
       const arr = raw ? JSON.parse(raw) : [];
-      arr.unshift(order); // más reciente primero
+      arr.unshift(order);
       localStorage.setItem(PEDIDOS_KEY, JSON.stringify(arr));
     } catch {}
   }
 
   function savePedidoActual(order) {
-    try { localStorage.setItem(PEDIDO_ACTUAL_KEY, JSON.stringify(order)); } catch {}
+    try {
+      localStorage.setItem(PEDIDO_ACTUAL_KEY, JSON.stringify(order));
+    } catch {}
   }
 
-  // ==== API expuesta al app ====
   const api = useMemo(() => ({
     state,
 
-    // ---- setters con compatibilidad ----
+    // ========= Setters base =========
     setOrigin: (text, coords = null) =>
-      setState((s) => ({ ...s, origin: text, originCoords: coords ? normCoords(coords) : s.originCoords })),
+      setState((s) => ({
+        ...s,
+        origin: text,
+        originCoords: coords ? normCoords(coords) : s.originCoords,
+      })),
+
     setDestination: (text, coords = null) =>
-      setState((s) => ({ ...s, destination: text, destinationCoords: coords ? normCoords(coords) : s.destinationCoords })),
-    setSize: (v) => setState((s) => ({ ...s, size: v })),
+      setState((s) => ({
+        ...s,
+        destination: text,
+        destinationCoords: coords ? normCoords(coords) : s.destinationCoords,
+      })),
 
-    // Compatibilidad con código viejo
-    setNotes: (v) => setState((s) => ({ ...s, notesTo: v })),        // antes "notes" apuntaba al destino
-    setContact: (v) => setState((s) => ({ ...s, contactTo: v })),    // antes "contact" apuntaba al destino
-    setKm: (v) => setState((s) => ({ ...s, km: Number(v) || 0 })),
-
-    // ---- nuevos setters expresivos ----
     setOriginCoords: (coords) =>
       setState((s) => ({ ...s, originCoords: normCoords(coords) })),
+
     setDestinationCoords: (coords) =>
       setState((s) => ({ ...s, destinationCoords: normCoords(coords) })),
 
-    setNotesFrom: (v) => setState((s) => ({ ...s, notesFrom: v })),
-    setNotesTo: (v) => setState((s) => ({ ...s, notesTo: v })),
-    setContactFrom: (v) => setState((s) => ({ ...s, contactFrom: v })),
-    setContactTo: (v) => setState((s) => ({ ...s, contactTo: v })),
-    setDropoffApt: (v) => setState((s) => ({ ...s, dropoffApt: v })),
+    setSize: (value) =>
+      setState((s) => ({ ...s, size: value })),
 
     setService: (type, surcharge = 0) =>
-      setState((s) => ({ ...s, serviceType: type, surcharge: Number(surcharge) || 0 })),
+      setState((s) => ({
+        ...s,
+        serviceType: type || "simple",
+        surcharge: Number(surcharge) || 0,
+      })),
+
+    setKm: (value) =>
+      setState((s) => ({ ...s, km: Number(value) || 0 })),
 
     setPrice: (amount) =>
       setState((s) => ({ ...s, price: Number(amount) || 0 })),
 
-    // set de cotización completo (km + price + breakdown)
     setQuote: ({ km, total, breakdown }) =>
       setState((s) => ({
         ...s,
@@ -239,46 +121,102 @@ export function FlowProvider({ children }) {
         quotedAt: Date.now(),
       })),
 
-    // ---- armar snapshot de pedido listo para guardar/subir ----
+    // ========= Notas / contactos =========
+    setNotesFrom: (value) =>
+      setState((s) => ({ ...s, notesFrom: value })),
+
+    setNotesTo: (value) =>
+      setState((s) => ({ ...s, notesTo: value })),
+
+    setContactFrom: (value) =>
+      setState((s) => ({ ...s, contactFrom: value })),
+
+    setContactTo: (value) =>
+      setState((s) => ({ ...s, contactTo: value })),
+
+    setDropoffApt: (value) =>
+      setState((s) => ({ ...s, dropoffApt: value })),
+
+    // ========= Destinatario =========
+    setRecipientName: (value) =>
+      setState((s) => ({ ...s, recipientName: value })),
+
+    setRecipientPhone: (value) =>
+      setState((s) => ({ ...s, recipientPhone: value })),
+
+    // ========= Contrato operativo =========
+    setPaymentMethod: (value) =>
+      setState((s) => ({
+        ...s,
+        paymentMethod: value === "digital" ? "digital" : "cash",
+      })),
+
+    setAllowsFallbackToLocal: (value) =>
+      setState((s) => ({ ...s, allowsFallbackToLocal: Boolean(value) })),
+
+    setPriority: (value) =>
+      setState((s) => ({
+        ...s,
+        priority: value === "high" ? "high" : "normal",
+      })),
+
+    // ========= Compatibilidad con código viejo =========
+    setNotes: (value) =>
+      setState((s) => ({ ...s, notesTo: value })),
+
+    setContact: (value) =>
+      setState((s) => ({ ...s, contactTo: value })),
+
+    // ========= Builder profesional =========
     buildOrder: (sessionUser) => {
       const su = sessionUser || safeReadSessionUser();
       const addresses = Array.isArray(su?.addresses) ? su.addresses : [];
-      const def = addresses.find(a => a?.isDefault) || addresses[0] || null;
+      const def = addresses.find((a) => a?.isDefault) || addresses[0] || null;
+
+      const paymentMethod = state.paymentMethod === "digital" ? "digital" : "cash";
+      const requiresCashHandling = paymentMethod === "cash";
+
+      const recipientName = String(state.recipientName || "").trim();
+      const recipientPhone = String(state.recipientPhone || "").trim();
+      const dropoffApt = String(state.dropoffApt || "").trim();
+
+      const notesFrom = String(state.notesFrom || "").trim();
+      const notesTo = String(state.notesTo || "").trim();
+
+      const originCoords = normCoords(state.originCoords);
+      const destinationCoords = normCoords(state.destinationCoords);
+
+      const orderId = `ORD-${Date.now()}`;
 
       return {
-        id: `ORD-${Date.now()}`,
-        createdAt: new Date().toISOString(),
+        // ========= Identidad / metadata =========
+        id: orderId,
+        version: 1,
+        appSource: "customer_app",
+        createdBy: "customer_app",
 
-        // Relación con el cliente
-        userId: su?.uid || null,                           // 👈 corrección: usar uid
+        createdAt: null, // lo completa server/firestore
+        createdAtLocal: new Date().toISOString(),
+        lastUpdate: null, // lo completa server/firestore
+
+        // ========= Estados =========
+        status: "pendiente",
+        serverStatus: "pending_validation",
+        assignmentStatus: "unassigned",
+
+        // ========= Naturaleza del pedido =========
+        tipoPedido: "online",
+        assignmentScope: "online",
+        allowsFallbackToLocal: Boolean(state.allowsFallbackToLocal),
+        priority: state.priority === "high" ? "high" : "normal",
+
+        // ========= Cliente =========
+        customerUid: su?.uid || null,
+        userId: su?.uid || null,
         userEmail: su?.email || "",
         userName: su ? `${su.nombre || ""} ${su.apellido || ""}`.trim() : "",
+        customerPhone: su?.telefono || "",
 
-        // Servicio
-        serviceType: state.serviceType || "simple",
-        surcharge: Number(state.surcharge) || 0,
-        size: state.size,
-
-        // Origen / Destino
-        origin: state.origin,
-        originCoords: state.originCoords,                   // { lat, lng, placeId }
-        destination: state.destination,
-        destinationCoords: state.destinationCoords,         // { lat, lng, placeId }
-        dropoffApt: state.dropoffApt || "",
-
-        // Distancia y cotización
-        km: Number(state.km) || 0,
-        price: Number(state.price) || 0,
-        breakdown: state.breakdown || null,                // detalle de cálculo
-        quotedAt: state.quotedAt || null,
-
-        // Contactos y notas
-        contactFrom: state.contactFrom || (su?.telefono || ""),
-        contactTo: state.contactTo || "",
-        notesFrom: state.notesFrom || "",
-        notesTo: state.notesTo || "",
-
-        // Snapshot dirección actual del usuario (por si la cambia después)
         customerDefaultAddress: {
           address: su?.direccion || def?.address || "",
           lat: def?.lat ?? null,
@@ -287,19 +225,71 @@ export function FlowProvider({ children }) {
           placeId: def?.placeId || "",
         },
 
-        // Estado inicial
-        status: "pendiente",
+        // ========= Servicio =========
+        serviceType: state.serviceType || "simple",
+        size: state.size || "chico",
+        surcharge: Number(state.surcharge) || 0,
+
+        // ========= Geografía =========
+        origin: state.origin || "",
+        originCoords: originCoords
+          ? { ...originCoords }
+          : { lat: null, lng: null, placeId: "" },
+
+        destination: state.destination || "",
+        destinationCoords: destinationCoords
+          ? { ...destinationCoords }
+          : { lat: null, lng: null, placeId: "" },
+
+        dropoffApt,
+
+        km: Number(state.km) || 0,
+
+        // ========= Económico =========
+        price: Number(state.price) || 0,
+        breakdown: state.breakdown || null,
+        quotedAt: state.quotedAt || null,
+
+        paymentMethod,
+        requiresCashHandling,
+
+        // ========= Contactos =========
+        contactFrom: state.contactFrom || su?.telefono || "",
+        contactTo: state.contactTo || recipientPhone || "",
+
+        // ========= Destinatario =========
+        recipient: {
+          name: recipientName,
+          phone: recipientPhone,
+          floor: dropoffApt,
+        },
+
+        // ========= Notas =========
+        notesFrom,
+        notesTo,
+        notes: {
+          origen: notesFrom,
+          destino: notesTo,
+        },
+
+        // ========= Asignación / tracking =========
+        assignedCadeteId: null,
+        assignedCadete: null,
+        assignedAt: null,
+
+        // ========= Server =========
+        serverReviewSummary: null,
       };
     },
 
-    // guardar en LocalStorage: historial + pedido actual
+    // ========= Guardado local =========
     saveOrder: (order) => {
       if (!order) return;
       appendPedido(order);
       savePedidoActual(order);
     },
 
-    // reset del flow (por ejemplo, al finalizar o cancelar)
+    // ========= Reset =========
     reset: () => setState(initialState),
   }), [state]);
 
@@ -308,21 +298,36 @@ export function FlowProvider({ children }) {
 
 export function useFlow() {
   const ctx = useContext(FlowContext);
-  if (!ctx) throw new Error("useFlow debe usarse dentro de <FlowProvider>");
+  if (!ctx) {
+    throw new Error("useFlow debe usarse dentro de <FlowProvider>");
+  }
   return ctx;
 }
 
-// ---- utils ----
-function normCoords(c) {
-  if (!c) return null;
-  const lat = Number(c.lat);
-  const lng = Number(c.lng);
-  const placeId = typeof c.placeId === "string" ? c.placeId : (c.place_id || "");
+// ========= Utils =========
+function normCoords(coords) {
+  if (!coords) return null;
+
+  const lat = Number(coords.lat);
+  const lng = Number(coords.lng);
+  const placeId =
+    typeof coords.placeId === "string"
+      ? coords.placeId
+      : coords.place_id || "";
+
   if (!isFinite(lat) || !isFinite(lng)) return null;
-  return { lat, lng, placeId: placeId || "" };
+
+  return {
+    lat,
+    lng,
+    placeId: placeId || "",
+  };
 }
 
 function safeReadSessionUser() {
-  try { return JSON.parse(localStorage.getItem("SessionUser") || "null"); }
-  catch { return null; }
+  try {
+    return JSON.parse(localStorage.getItem("SessionUser") || "null");
+  } catch {
+    return null;
+  }
 }
