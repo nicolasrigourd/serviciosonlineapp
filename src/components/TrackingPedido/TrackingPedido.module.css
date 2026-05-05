@@ -29,6 +29,20 @@
   transform: rotate(-8deg) scale(1.2);
 }
 
+.routeLine {
+  position: absolute;
+  z-index: 1;
+  top: 30%;
+  left: 25%;
+  width: 52%;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2563eb, #16a34a);
+  transform: rotate(12deg);
+  opacity: 0.55;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
+}
+
 .originMarker,
 .destinationMarker,
 .cadeteMarker {
@@ -66,6 +80,33 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  transition: all 0.25s ease;
+}
+
+.cadete_assigned {
+  top: 48%;
+  left: 42%;
+}
+
+.cadete_started_pickup {
+  top: 38%;
+  left: 31%;
+}
+
+.cadete_arrived_pickup {
+  top: 24%;
+  left: 23%;
+}
+
+.cadete_go_to_dropoff {
+  top: 32%;
+  left: 62%;
+}
+
+.cadete_arrived_dropoff,
+.cadete_delivered {
+  top: 35%;
+  left: 78%;
 }
 
 .cadetePulse {
@@ -91,6 +132,7 @@
   font-size: 0.78rem;
   font-weight: 700;
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+  white-space: nowrap;
 }
 
 .bottomSheet {
@@ -104,6 +146,8 @@
   padding: 10px 18px 20px;
   box-shadow: 0 -18px 45px rgba(15, 23, 42, 0.18);
   animation: sheetUp 0.28s ease-out;
+  max-height: 72dvh;
+  overflow-y: auto;
 }
 
 .handle {
@@ -115,7 +159,7 @@
 }
 
 .statusBlock {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .statusLabel {
@@ -131,15 +175,96 @@
 .statusTitle {
   margin: 0;
   color: #0f172a;
-  font-size: 1.35rem;
-  line-height: 1.15;
+  font-size: 1.42rem;
+  line-height: 1.12;
 }
 
 .statusText {
-  margin: 6px 0 0;
+  margin: 7px 0 0;
   color: #64748b;
   font-size: 0.92rem;
   line-height: 1.35;
+}
+
+.progressWrap {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+  font-size: 0.78rem;
+}
+
+.progressHeader span {
+  color: #64748b;
+  font-weight: 800;
+}
+
+.progressHeader strong {
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.progressBar {
+  height: 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2563eb, #16a34a);
+  transition: width 0.35s ease;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+  margin-top: 11px;
+}
+
+.stepDot {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.stepDot span {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #cbd5e1;
+}
+
+.stepDot small {
+  width: 100%;
+  color: #94a3b8;
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stepDotActive span {
+  background: #16a34a;
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.13);
+}
+
+.stepDotActive small {
+  color: #334155;
 }
 
 .cadeteCard {
@@ -150,7 +275,7 @@
   border: 1px solid #e2e8f0;
   border-radius: 18px;
   padding: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .avatar {
@@ -199,6 +324,37 @@
   font-weight: 800;
 }
 
+.quickInfo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-bottom: 12px;
+}
+
+.quickInfo div {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 10px 12px;
+}
+
+.quickInfo span,
+.orderInfo span {
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.quickInfo strong,
+.orderInfo strong {
+  display: block;
+  color: #1e293b;
+  font-size: 0.9rem;
+  line-height: 1.25;
+  margin-top: 3px;
+}
+
 .orderInfo {
   display: grid;
   gap: 9px;
@@ -208,19 +364,6 @@
 .orderInfo div {
   display: grid;
   gap: 2px;
-}
-
-.orderInfo span {
-  color: #94a3b8;
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.orderInfo strong {
-  color: #1e293b;
-  font-size: 0.9rem;
-  line-height: 1.25;
 }
 
 .actions {
@@ -254,6 +397,11 @@
   flex: 1;
   background: #e2e8f0;
   color: #334155;
+}
+
+.secondaryBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 @keyframes sheetUp {
@@ -290,5 +438,28 @@
     transform: translateX(-50%);
     border-radius: 28px;
     bottom: 18px;
+  }
+}
+
+@media (max-width: 390px) {
+  .bottomSheet {
+    padding: 10px 14px 18px;
+    max-height: 76dvh;
+  }
+
+  .statusTitle {
+    font-size: 1.25rem;
+  }
+
+  .steps {
+    gap: 2px;
+  }
+
+  .stepDot small {
+    font-size: 0.54rem;
+  }
+
+  .actions {
+    flex-direction: column;
   }
 }
