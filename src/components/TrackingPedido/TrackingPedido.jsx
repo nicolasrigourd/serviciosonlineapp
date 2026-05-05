@@ -1,3 +1,8 @@
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
+
+import { db } from "../../services/firebase";
 import styles from "./TrackingPedido.module.css";
 
 function getCadeteNombre(cadete) {
@@ -25,6 +30,14 @@ function getCadeteBadge(cadete) {
   if (tipo.includes("hibrido")) return "Híbrido";
 
   return "Asignado";
+}
+
+function getRatingType(score) {
+  const value = Number(score || 0);
+
+  if (value <= 2) return "negative";
+
+  return "positive";
 }
 
 function getPedidoTrackingState(pedido) {
@@ -145,14 +158,8 @@ function formatMoney(value) {
   return `$${num.toLocaleString("es-AR")}`;
 }
 
-function getPhone(pedido) {
-  return (
-    pedido?.recipient?.phone ||
-    pedido?.contactTo ||
-    pedido?.customerSnapshot?.telefono ||
-    pedido?.customerPhone ||
-    ""
-  );
+function getPedidoId(pedido) {
+  return pedido?._docId || pedido?.id || pedido?.orderId || "";
 }
 
 const STEPS = [
@@ -165,9 +172,19 @@ const STEPS = [
 ];
 
 export default function TrackingPedido({ pedido }) {
+  const navigate = useNavigate();
+
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [savingRating, setSavingRating] = useState(false);
+  const [ratingError, setRatingError] = useState("");
+
   const cadete = pedido?.assignedCadete || null;
   const nombreCadete = getCadeteNombre(cadete);
   const tracking = getPedidoTrackingState(pedido);
+
+  const isDelivered =
+    pedido?.status === "finalizado" || pedido?.currentStep === "delivered";
 
   const tieneUbicacion =
     typeof cadete?.lat === "number" && typeof cadete?.lng === "number";
@@ -182,11 +199,149 @@ export default function TrackingPedido({ pedido }) {
     "Destino no informado"
   );
 
-  const telefono = getPhone(pedido);
   const precio = formatMoney(pedido?.price || pedido?.breakdown?.total);
   const movilidad = cadete?.movilidad || "Movilidad no informada";
   const sucursal = cadete?.sucursal ? ` · ${cadete.sucursal}` : "";
   const badge = getCadeteBadge(cadete);
+
+  const selectedRating = hoverRating || rating;
+
+  const ratingText = useMemo(() => {
+    const value = rating || hoverRating;
+
+    if (value === 1) return "Muy mala";
+    if (value === 2) return "Mala";
+    if (value === 3) return "Correcta";
+    if (value === 4) return "Muy buena";
+    if (value === 5) return "Excelente";
+
+    return "Seleccioná una puntuación";
+  }, [rating, hoverRating]);
+
+  const handleSubmitRating = async () => {
+    if (!rating) {
+      setRatingError("Seleccioná una puntuación para finalizar.");
+      return;
+    }
+
+    const pedidoId = getPedidoId(pedido);
+
+    if (!pedidoId) {
+      setRatingError("No pudimos identificar el pedido para guardar la valoración.");
+      return;
+    }
+
+    const ratingType = getRatingType(rating);
+
+    setSavingRating(true);
+    setRatingError("");
+
+    try {
+      await updateDoc(doc(db, "orders", pedidoId), {
+        rating: {
+          score: rating,
+          type: ratingType,
+          cadeteId: cadete?.cadeteId || pedido?.assignedCadeteId || null,
+          cadeteNombre: nombreCadete,
+          ratedAt: serverTimestamp(),
+          source: "customer_app",
+        },
+        customerRated: true,
+        customerRatedAt: serverTimestamp(),
+        lastUpdate: serverTimestamp(),
+      });
+
+      localStorage.removeItem("NuevoPedido");
+
+      navigate("/home", { replace: true });
+    } catch (error) {
+      console.error("[TRACKING][RATING] Error guardando valoración:", error);
+      setRatingError("No pudimos guardar la valoración. Intentá nuevamente.");
+    } finally {
+      setSavingRating(false);
+    }
+  };
+
+  if (isDelivered) {
+    return (
+      <div className={styles.ratingScreen}>
+        <section className={styles.ratingCard}>
+          <div className={styles.ratingIcon}>✓</div>
+
+          <span className={styles.ratingLabel}>Pedido entregado</span>
+
+          <h1>¿Cómo fue tu experiencia?</h1>
+
+          <p>
+            Tu pedido fue finalizado correctamente. Para volver al inicio,
+            primero calificá la entrega.
+          </p>
+
+          <div className={styles.ratingCadeteCard}>
+            <div className={styles.avatar}>
+              {nombreCadete.charAt(0).toUpperCase()}
+            </div>
+
+            <div>
+              <strong>{nombreCadete}</strong>
+              <span>
+                {movilidad}
+                {sucursal}
+              </span>
+            </div>
+          </div>
+
+          <div className={styles.stars} aria-label="Calificación del repartidor">
+            {[1, 2, 3, 4, 5].map((star) => {
+              const active = star <= selectedRating;
+
+              return (
+                <button
+                  key={star}
+                  type="button"
+                  className={`${styles.starBtn} ${
+                    active ? styles.starBtnActive : ""
+                  }`}
+                  onClick={() => {
+                    setRating(star);
+                    setRatingError("");
+                  }}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  aria-label={`Calificar con ${star} estrella${star > 1 ? "s" : ""}`}
+                >
+                  ★
+                </button>
+              );
+            })}
+          </div>
+
+          <div className={styles.ratingText}>{ratingText}</div>
+
+          {ratingError && (
+            <div className={styles.ratingError}>
+              {ratingError}
+            </div>
+          )}
+
+          <button
+            type="button"
+            className={styles.ratingSubmitBtn}
+            onClick={handleSubmitRating}
+            disabled={!rating || savingRating}
+          >
+            {savingRating ? "Guardando..." : "Enviar calificación y volver al inicio"}
+          </button>
+
+          {!rating && (
+            <small className={styles.ratingHint}>
+              La calificación es obligatoria para cerrar el seguimiento.
+            </small>
+          )}
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className={`${styles.screen} ${styles[`screen_${tracking.key}`] || ""}`}>
@@ -297,16 +452,6 @@ export default function TrackingPedido({ pedido }) {
         </div>
 
         <div className={styles.actions}>
-          {telefono ? (
-            <a className={styles.secondaryBtn} href={`tel:${telefono}`}>
-              Llamar
-            </a>
-          ) : (
-            <button className={styles.secondaryBtn} type="button" disabled>
-              Sin teléfono
-            </button>
-          )}
-
           <button type="button" className={styles.primaryBtn}>
             Ver detalle
           </button>
