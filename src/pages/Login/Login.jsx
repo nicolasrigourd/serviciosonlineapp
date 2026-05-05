@@ -19,7 +19,6 @@ export default function Login() {
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
   const [enter, setEnter] = useState(false);
 
   useEffect(() => {
@@ -31,22 +30,14 @@ export default function Login() {
     return usernameOrEmail.trim().length > 0 && password.length > 0 && !submitting;
   }, [usernameOrEmail, password, submitting]);
 
-  const isEmail = (value) => {
-    return /\S+@\S+\.\S+/.test(String(value || "").trim());
-  };
+  const isEmail = (value) => /\S+@\S+\.\S+/.test(String(value || "").trim());
 
   async function loginByUserOrEmail(input, pass) {
     const raw = String(input || "").trim();
 
-    if (!raw) {
+    if (!raw || !pass) {
       const err = new Error("EMPTY_INPUT");
       err.code = "app/empty-input";
-      throw err;
-    }
-
-    if (!pass) {
-      const err = new Error("EMPTY_PASSWORD");
-      err.code = "app/empty-password";
       throw err;
     }
 
@@ -55,7 +46,6 @@ export default function Login() {
     }
 
     const uname = raw.toLowerCase();
-
     const snap = await getDoc(doc(db, "usernames", uname));
 
     if (!snap.exists()) {
@@ -134,7 +124,6 @@ export default function Login() {
   function getErrorMessage(errorCode) {
     switch (errorCode) {
       case "app/empty-input":
-      case "app/empty-password":
         return "Completá usuario/email y contraseña.";
 
       case "app/username-not-found":
@@ -144,7 +133,7 @@ export default function Login() {
         return "No encontramos un email asociado a ese usuario.";
 
       case "app/userdoc-not-found":
-        return "Tu cuenta existe, pero falta completar tu perfil. Contactá a soporte.";
+        return "Tu cuenta existe, pero falta completar tu perfil.";
 
       case "auth/user-not-found":
         return "El email ingresado no está registrado.";
@@ -163,7 +152,7 @@ export default function Login() {
         return "No pudimos conectar. Revisá tu conexión a internet.";
 
       case "permission-denied":
-        return "No tenés permisos para acceder. Revisá la configuración de la cuenta.";
+        return "No tenés permisos para acceder.";
 
       default:
         return "No se pudo iniciar sesión. Intentá nuevamente.";
@@ -189,9 +178,7 @@ export default function Login() {
 
     try {
       const cred = await loginByUserOrEmail(input, pass);
-
       await fetchProfileAndCache(cred.user.uid);
-
       navigate("/home", { replace: true });
     } catch (err) {
       console.error("[LOGIN]", err);
@@ -204,27 +191,18 @@ export default function Login() {
   return (
     <div className={`${styles.screen} ${enter ? styles.enter : ""}`}>
       <main className={styles.shell}>
-        <section className={styles.brandPanel}>
-          <div className={styles.logoFrame}>
-            <img
-              src={logoLogin}
-              alt="El Cadete Express"
-              className={styles.logoImg}
-            />
-          </div>
+        <header className={styles.logoBox}>
+          <img
+            src={logoLogin}
+            alt="El Cadete Express"
+            className={styles.logoImg}
+          />
+        </header>
 
-          <div className={styles.brandText}>
-            <span className={styles.eyebrow}>Servicios Online App</span>
-            <h1>Bienvenido</h1>
-            <p>Ingresá para solicitar tus envíos y seguirlos en tiempo real.</p>
-          </div>
-        </section>
-
-        <section className={styles.card} aria-label="Formulario de inicio de sesión">
+        <section className={styles.card} aria-label="Inicio de sesión">
           <form className={styles.form} onSubmit={handleSubmit}>
             <div className={styles.formHeader}>
-              <h2>Iniciar sesión</h2>
-              <p>Usá tu usuario o email registrado.</p>
+              <h1>Iniciar sesión</h1>
             </div>
 
             <div className={styles.field}>
@@ -249,10 +227,6 @@ export default function Login() {
                 spellCheck="false"
                 inputMode="email"
               />
-
-              <span className={styles.helperText}>
-                Podés ingresar con tu usuario o con tu email.
-              </span>
             </div>
 
             <div className={styles.field}>
