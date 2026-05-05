@@ -4,46 +4,43 @@
   background: #f3f4f6;
   color: #111827;
   overflow: hidden;
-
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto auto;
+  grid-template-rows: minmax(0, 1fr) auto;
 }
 
 .homeMain {
   min-height: 0;
   overflow: hidden;
   position: relative;
-
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
 }
 
 /* ===============================
-   STAGE SUPERIOR SIN MAPA
+   STAGE SUPERIOR COMPACTO
    =============================== */
 
 .topStage {
   position: relative;
-  min-height: 245px;
-  max-height: 300px;
-  height: 32dvh;
+  min-height: 112px;
+  max-height: 132px;
   overflow: visible;
-  padding: calc(12px + env(safe-area-inset-top)) 14px 20px;
+  padding: calc(12px + env(safe-area-inset-top)) 14px 18px;
   box-sizing: border-box;
   background:
-    radial-gradient(circle at 18% 22%, rgba(34, 197, 94, 0.2), transparent 28%),
-    radial-gradient(circle at 86% 12%, rgba(59, 130, 246, 0.12), transparent 30%),
-    linear-gradient(180deg, #eef2f4 0%, #e5e7eb 100%);
+    radial-gradient(circle at 18% 22%, rgba(34, 197, 94, 0.22), transparent 30%),
+    radial-gradient(circle at 86% 8%, rgba(15, 23, 42, 0.08), transparent 32%),
+    linear-gradient(180deg, #eef7ef 0%, #e8eee9 100%);
 }
 
 .topStage::before {
   content: "";
   position: absolute;
   inset: -40px;
-  opacity: 0.32;
+  opacity: 0.25;
   background-image:
-    linear-gradient(rgba(17, 24, 39, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(17, 24, 39, 0.055) 1px, transparent 1px);
+    linear-gradient(rgba(17, 24, 39, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 24, 39, 0.05) 1px, transparent 1px);
   background-size: 42px 42px;
   transform: rotate(-8deg) scale(1.15);
   pointer-events: none;
@@ -53,45 +50,43 @@
 .topGlowTwo {
   position: absolute;
   border-radius: 999px;
-  filter: blur(6px);
+  filter: blur(8px);
   pointer-events: none;
 }
 
 .topGlowOne {
-  width: 160px;
-  height: 160px;
-  left: 20px;
-  bottom: 22px;
+  width: 130px;
+  height: 130px;
+  left: 18px;
+  bottom: -24px;
   background: rgba(34, 197, 94, 0.18);
 }
 
 .topGlowTwo {
-  width: 130px;
-  height: 130px;
-  right: 22px;
-  top: 82px;
-  background: rgba(15, 23, 42, 0.07);
+  width: 110px;
+  height: 110px;
+  right: 20px;
+  top: 52px;
+  background: rgba(15, 23, 42, 0.06);
 }
 
 /* ===============================
-   NAVBAR FLOTANTE
+   HEADER FLOTANTE
    =============================== */
 
 .homeFloatingHeader {
   position: relative;
   z-index: 30;
-
   min-height: 66px;
   display: grid;
   grid-template-columns: 48px 1fr auto;
   align-items: center;
   gap: 11px;
-
   padding: 9px 10px;
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, 0.93);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 14px 35px rgba(17, 24, 39, 0.12);
 }
 
@@ -183,17 +178,15 @@
   position: absolute;
   left: 0;
   top: calc(100% + 10px);
-  z-index: 60;
-
+  z-index: 80;
   width: 218px;
   padding: 8px;
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.97);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 22px 48px rgba(17, 24, 39, 0.18);
   border: 1px solid rgba(17, 24, 39, 0.06);
-
   display: grid;
   gap: 4px;
   animation: profileMenuIn 0.16s ease-out;
@@ -257,47 +250,7 @@
 }
 
 /* ===============================
-   TEXTO SUPERIOR
-   =============================== */
-
-.topIntro {
-  position: relative;
-  z-index: 3;
-  margin-top: 22px;
-  display: grid;
-  gap: 5px;
-  max-width: 420px;
-}
-
-.topKicker {
-  color: #15803d;
-  font-size: 0.72rem;
-  line-height: 1;
-  font-weight: 950;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.topIntro h1 {
-  margin: 0;
-  color: #111827;
-  font-size: clamp(1.65rem, 8vw, 2.25rem);
-  line-height: 0.96;
-  font-weight: 1000;
-  letter-spacing: -0.065em;
-}
-
-.topIntro p {
-  margin: 0;
-  max-width: 330px;
-  color: #6b7280;
-  font-size: 0.88rem;
-  line-height: 1.22;
-  font-weight: 700;
-}
-
-/* ===============================
-   CONTENIDO GENERAL
+   CONTENIDO
    =============================== */
 
 .homeContent {
@@ -305,8 +258,8 @@
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 0 14px 14px;
-  margin-top: -18px;
+  padding: 0 14px calc(86px + env(safe-area-inset-bottom));
+  margin-top: -12px;
   z-index: 6;
 }
 
@@ -315,49 +268,60 @@
   max-width: 920px;
   margin: 0 auto;
   display: grid;
-  gap: 10px;
-  padding-bottom: 6px;
+  gap: 12px;
+  padding-bottom: 10px;
   box-sizing: border-box;
 }
 
 /* ===============================
-   DIRECCIÓN ACTUAL
+   DIRECCIÓN STICKY
    =============================== */
+
+.addrStickyWrap {
+  position: sticky;
+  top: 8px;
+  z-index: 50;
+}
 
 .addrBtn {
   width: 100%;
-  min-height: 58px;
+  min-height: 60px;
   display: grid;
-  grid-template-columns: 40px 1fr 22px;
+  grid-template-columns: 42px 1fr 22px;
   align-items: center;
   gap: 10px;
-
   border: none;
-  border-radius: 22px;
+  border-radius: 23px;
   padding: 10px 12px;
-
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.96);
   color: #111827;
   text-align: left;
   cursor: pointer;
-
-  box-shadow: 0 18px 42px rgba(17, 24, 39, 0.12);
+  box-shadow:
+    0 18px 42px rgba(17, 24, 39, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   transition: transform 0.15s ease, background 0.15s ease;
 }
 
 .addrBtn:active {
   transform: scale(0.985);
-  background: #f3f4f6;
+  background: #f8fafc;
+}
+
+.addrBtnWarning {
+  border: 1px solid rgba(245, 158, 11, 0.45);
 }
 
 .addrIcon {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   display: grid;
   place-items: center;
-  border-radius: 16px;
-  background: #f3f4f6;
-  color: #111827;
+  border-radius: 17px;
+  background: #dcfce7;
+  color: #15803d;
 }
 
 .addrText {
@@ -371,11 +335,11 @@
 .addrText strong {
   display: block;
   color: #6b7280;
-  font-size: 0.72rem;
-  line-height: 1.12;
-  font-weight: 850;
+  font-size: 0.7rem;
+  line-height: 1.1;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
 }
 
 .addrText span {
@@ -383,7 +347,19 @@
   color: #111827;
   font-size: 0.9rem;
   line-height: 1.15;
-  font-weight: 900;
+  font-weight: 950;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.addrText em {
+  display: block;
+  color: #64748b;
+  font-style: normal;
+  font-size: 0.74rem;
+  line-height: 1.12;
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -396,18 +372,104 @@
 }
 
 /* ===============================
-   CARRUSEL CHICO
+   SERVICIOS
+   =============================== */
+
+.servicesPanel {
+  border-radius: 26px;
+  padding: 16px 14px 15px;
+  background: #ffffff;
+  box-shadow: 0 16px 38px rgba(17, 24, 39, 0.09);
+}
+
+.servicesHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.sectionKicker {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 24px;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(22, 163, 74, 0.1);
+  color: #15803d;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.servicesHeader h1 {
+  margin: 8px 0 3px;
+  color: #111827;
+  font-size: clamp(1.35rem, 7vw, 1.9rem);
+  line-height: 0.98;
+  font-weight: 1000;
+  letter-spacing: -0.06em;
+}
+
+.servicesHeader p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.84rem;
+  line-height: 1.22;
+  font-weight: 700;
+}
+
+.actionsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: start;
+  gap: 10px;
+  height: auto;
+  min-height: auto;
+  overflow: visible;
+  padding: 0 0 2px;
+  box-sizing: border-box;
+}
+
+/* ===============================
+   CARRUSEL COMPACTO
    =============================== */
 
 .carouselSection {
   width: 100%;
   overflow: hidden;
+  display: grid;
+  gap: 8px;
+}
+
+.carouselHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 3px;
+}
+
+.carouselHeader span {
+  color: #15803d;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.carouselHeader strong {
+  color: #111827;
+  font-size: 0.86rem;
+  font-weight: 950;
 }
 
 .carouselTrack {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(252px, 82%);
+  grid-auto-columns: minmax(232px, 72%);
   gap: 10px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
@@ -421,14 +483,15 @@
 }
 
 .carouselCard {
-  min-height: 132px;
+  min-height: 96px;
   scroll-snap-align: start;
-  border-radius: 24px;
-  padding: 15px;
+  border-radius: 22px;
+  padding: 12px;
   background: #ffffff;
-  box-shadow: 0 18px 42px rgba(17, 24, 39, 0.12);
+  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.08);
   display: grid;
-  align-content: space-between;
+  grid-template-columns: 1fr auto;
+  align-items: center;
   gap: 12px;
   overflow: hidden;
   position: relative;
@@ -439,10 +502,10 @@
   position: absolute;
   right: -42px;
   bottom: -54px;
-  width: 130px;
-  height: 130px;
+  width: 118px;
+  height: 118px;
   border-radius: 999px;
-  background: rgba(34, 197, 94, 0.16);
+  background: rgba(34, 197, 94, 0.14);
 }
 
 .carouselCard > * {
@@ -454,10 +517,10 @@
   display: inline-flex;
   width: fit-content;
   border-radius: 999px;
-  padding: 6px 9px;
+  padding: 5px 8px;
   background: #dcfce7;
   color: #15803d;
-  font-size: 0.68rem;
+  font-size: 0.64rem;
   line-height: 1;
   font-weight: 950;
   text-transform: uppercase;
@@ -465,98 +528,37 @@
 }
 
 .carouselCard h2 {
-  margin: 8px 0 0;
+  margin: 7px 0 0;
   color: #111827;
-  font-size: 1.12rem;
+  font-size: 0.98rem;
   line-height: 1.03;
   font-weight: 1000;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.04em;
 }
 
 .carouselCard p {
-  margin: 5px 0 0;
+  margin: 4px 0 0;
   color: #6b7280;
-  font-size: 0.8rem;
-  line-height: 1.2;
+  font-size: 0.74rem;
+  line-height: 1.18;
   font-weight: 650;
 }
 
 .carouselCard button {
-  width: fit-content;
-  min-height: 38px;
+  min-width: 62px;
+  min-height: 36px;
   border: none;
   border-radius: 999px;
-  padding: 0 14px;
+  padding: 0 12px;
   background: #111827;
   color: #ffffff;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 900;
   cursor: pointer;
 }
 
 .carouselCard button:active {
   transform: scale(0.98);
-}
-
-/* ===============================
-   BOTTOM SHEET / SERVICIOS
-   =============================== */
-
-.homeBottomSheet {
-  margin-top: 0;
-  border-radius: 24px 24px 18px 18px;
-  padding: 9px 14px 14px;
-  background: #ffffff;
-  box-shadow: 0 18px 42px rgba(17, 24, 39, 0.1);
-}
-
-.homeSheetHandle {
-  width: 42px;
-  height: 5px;
-  border-radius: 999px;
-  background: #d1d5db;
-  margin: 0 auto 11px;
-}
-
-.homeSheetHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 11px;
-}
-
-.homeSheetHeader h2 {
-  margin: 0;
-  color: #111827;
-  font-size: 1.08rem;
-  line-height: 1.1;
-  font-weight: 950;
-  letter-spacing: -0.03em;
-}
-
-.homeSheetHeader p {
-  margin: 4px 0 0;
-  color: #6b7280;
-  font-size: 0.8rem;
-  line-height: 1.22;
-  font-weight: 650;
-}
-
-/* ===============================
-   GRILLA DE SERVICIOS
-   =============================== */
-
-.actionsGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-content: start;
-  gap: 10px;
-  height: auto;
-  min-height: auto;
-  overflow: visible;
-  padding: 0 0 4px;
-  box-sizing: border-box;
 }
 
 /* ===============================
@@ -568,13 +570,11 @@
   grid-template-columns: 42px 1fr;
   align-items: center;
   gap: 12px;
-
-  border-radius: 20px;
+  border-radius: 22px;
   padding: 13px;
-
   background: #ffffff;
   color: #111827;
-  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.07);
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.06);
 }
 
 .infoIcon {
@@ -613,8 +613,7 @@
 
 @media (max-width: 390px) {
   .topStage {
-    min-height: 230px;
-    height: 31dvh;
+    min-height: 106px;
     padding-left: 10px;
     padding-right: 10px;
   }
@@ -654,76 +653,71 @@
     width: 210px;
   }
 
-  .topIntro {
-    margin-top: 18px;
-  }
-
-  .topIntro h1 {
-    font-size: 1.55rem;
-  }
-
-  .topIntro p {
-    font-size: 0.8rem;
-  }
-
   .homeContent {
     padding-left: 10px;
     padding-right: 10px;
   }
 
+  .addrBtn {
+    min-height: 58px;
+    grid-template-columns: 40px 1fr 20px;
+    border-radius: 21px;
+    padding: 9px 10px;
+  }
+
+  .addrIcon {
+    width: 40px;
+    height: 40px;
+    border-radius: 16px;
+  }
+
+  .addrText strong {
+    font-size: 0.66rem;
+  }
+
+  .addrText span {
+    font-size: 0.84rem;
+  }
+
+  .servicesPanel {
+    border-radius: 24px;
+    padding: 14px 12px;
+  }
+
   .actionsGrid {
     gap: 8px;
+  }
+
+  .carouselTrack {
+    grid-auto-columns: minmax(218px, 78%);
   }
 }
 
 @media (max-width: 360px) {
-  .topStage {
-    min-height: 218px;
-  }
-
   .homeHeaderAction {
     max-width: 112px;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .addrBtn {
-    min-height: 54px;
-    grid-template-columns: 36px 1fr 20px;
-    border-radius: 20px;
-    padding: 9px 10px;
-  }
-
-  .addrIcon {
-    width: 36px;
-    height: 36px;
-    border-radius: 14px;
-  }
-
-  .addrText strong {
-    font-size: 0.68rem;
-  }
-
-  .addrText span {
-    font-size: 0.8rem;
+  .actionsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .carouselTrack {
-    grid-auto-columns: minmax(238px, 88%);
+    grid-auto-columns: minmax(210px, 82%);
   }
 
   .carouselCard {
-    min-height: 124px;
-    border-radius: 22px;
-    padding: 14px;
+    min-height: 92px;
   }
 
   .carouselCard h2 {
-    font-size: 1rem;
+    font-size: 0.92rem;
   }
 
   .carouselCard p {
-    font-size: 0.76rem;
+    font-size: 0.7rem;
   }
 
   .infoBanner {
@@ -739,42 +733,23 @@
   }
 }
 
-@media (max-height: 720px) {
+@media (max-height: 680px) {
   .topStage {
-    height: 29dvh;
-    min-height: 210px;
-    max-height: 260px;
+    min-height: 102px;
+    max-height: 118px;
+    padding-bottom: 16px;
   }
 
-  .topIntro {
-    margin-top: 14px;
+  .homeFloatingHeader {
+    min-height: 60px;
   }
 
-  .topIntro h1 {
-    font-size: 1.5rem;
-  }
-
-  .topIntro p {
-    font-size: 0.78rem;
+  .servicesHeader h1 {
+    font-size: 1.35rem;
   }
 
   .carouselCard {
-    min-height: 118px;
-  }
-
-  .homeBottomSheet {
-    padding: 8px 13px 13px;
-  }
-}
-
-@media (max-height: 640px) {
-  .topStage {
-    height: 27dvh;
-    min-height: 195px;
-  }
-
-  .topIntro {
-    display: none;
+    min-height: 88px;
   }
 }
 
@@ -785,7 +760,6 @@
   }
 
   .homeFloatingHeader,
-  .topIntro,
   .homeLayout {
     max-width: 920px;
     margin-left: auto;
@@ -798,7 +772,7 @@
   }
 
   .carouselTrack {
-    grid-auto-columns: minmax(300px, 42%);
+    grid-auto-columns: minmax(280px, 34%);
   }
 
   .actionsGrid {

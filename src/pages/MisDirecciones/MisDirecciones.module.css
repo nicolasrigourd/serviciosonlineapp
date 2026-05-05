@@ -1,175 +1,603 @@
 .screen {
   height: 100dvh;
+  width: 100%;
   display: grid;
-  grid-template-rows: auto 1fr auto; /* header | main | bottomnav */
-  background: #fff;
-  overflow: hidden; /* evita scroll global */
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.12), transparent 32%),
+    linear-gradient(180deg, #fbfff8 0%, #f8fafc 48%, #ffffff 100%);
+  color: #0f172a;
+  overflow: hidden;
 }
+
+/* ===============================
+   HEADER
+   =============================== */
 
 .header {
-  padding: 12px 14px 6px;
-  border-bottom: 1px solid #f0f3f5;
+  padding:
+    max(14px, env(safe-area-inset-top))
+    14px
+    10px;
+  background: rgba(255, 255, 255, 0.86);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
-.title { font-size: 1.04rem; font-weight: 900; color: #0f2410; }
-.subtitle { font-size: .9rem; color: #456; }
 
-/* padding-bottom considera la barra de acción y el bottomnav */
+.title {
+  margin: 0;
+  font-size: 1.32rem;
+  line-height: 1.05;
+  font-weight: 950;
+  letter-spacing: -0.045em;
+  color: #0f172a;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  font-size: 0.86rem;
+  line-height: 1.25;
+  color: #64748b;
+  font-weight: 650;
+}
+
+/* ===============================
+   MAIN
+   =============================== */
+
 .main {
-  padding: 10px 12px calc(env(safe-area-inset-bottom, 0) + 64px + 56px);
-  overflow: auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: grid;
-  gap: 12px;
+  align-content: start;
+  gap: 14px;
+  padding:
+    12px
+    14px
+    calc(132px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
 }
 
 .group {
   display: grid;
-  gap: 8px;
-  overflow: visible;              /* 👈 deja “asomar” la animación */
+  gap: 9px;
+  overflow: visible;
 }
-.groupTitle { font-weight: 800; color: #0f2410; font-size: .95rem; }
+
+.groupTitle {
+  margin: 0;
+  padding: 0 2px;
+  font-weight: 950;
+  color: #0f172a;
+  font-size: 0.94rem;
+  letter-spacing: -0.015em;
+}
 
 .list {
   display: grid;
   gap: 10px;
-  overflow: visible;              /* 👈 importante para el “salto” */
+  overflow: visible;
 }
 
-.empty { display: grid; place-items: center; }
-.emptyCard {
-  border: 1px solid #e6edf0;
-  border-radius: 14px;
-  padding: 16px;
-  background: #fafcfd;
-  color: #345;
-  text-align: center;
-  max-width: 420px;
-}
-
-/* ===== Barra inferior de acción ===== */
-.actionBar {
-  position: fixed;
-  left: 0; right: 0; bottom: calc(58px + env(safe-area-inset-bottom, 0)); /* arriba del bottomnav */
-  padding: 8px 12px;
-  background: linear-gradient(180deg, rgba(255,255,255,.0), rgba(255,255,255,.9) 30%, #fff 100%);
-  backdrop-filter: blur(2px);
+.empty {
   display: grid;
   place-items: center;
-  z-index: 21; /* por encima del contenido, debajo del sheet (30) */
+}
+
+.emptyCard {
+  width: 100%;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 22px;
+  padding: 18px 14px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #64748b;
+  text-align: center;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.emptyCard p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+/* ===============================
+   BARRA INFERIOR DE ACCIÓN
+   =============================== */
+
+.actionBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  z-index: 21;
+  padding: 10px 14px;
+  box-sizing: border-box;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.82) 32%,
+      rgba(255, 255, 255, 0.98) 100%
+    );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
 }
 
 .addBtn {
-  padding: 12px 14px;
-  border-radius: 12px;
-  font-weight: 900;
-  background: linear-gradient(180deg, #2e7d32, #1b5e20);
-  color: #fff;
-  border: 1px solid #1b5e20;
-  box-shadow: 0 10px 26px rgba(27,94,32,.22);
-  width: min(520px, calc(100% - 24px));
+  pointer-events: auto;
+  width: min(520px, 100%);
+  min-height: 52px;
+  border: none;
+  border-radius: 18px;
+  padding: 0 16px;
+  background: linear-gradient(135deg, #57d70a 0%, #22c55e 45%, #15803d 100%);
+  color: #ffffff;
+  font-size: 0.96rem;
+  font-weight: 950;
+  letter-spacing: 0.01em;
+  box-shadow:
+    0 16px 30px rgba(22, 163, 74, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  cursor: pointer;
 }
 
-/* ===== Overlay & Sheet ===== */
+.addBtn:active {
+  transform: translateY(1px) scale(0.995);
+}
+
+/* ===============================
+   OVERLAY & SHEET
+   =============================== */
+
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.35);
-  backdrop-filter: blur(2px);
-  z-index: 29; /* debajo del sheet, arriba del contenido */
+  z-index: 90;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
 }
 
 .sheet {
   position: fixed;
-  left: 0; right: 0; bottom: 0;
-  background: #fff;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
-  box-shadow: 0 -12px 40px rgba(0,0,0,.22);
-  z-index: 30; /* por encima del BottomNav (que suele tener 20) */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  max-height: 90dvh;
+  background: #ffffff;
+  border-top-left-radius: 30px;
+  border-top-right-radius: 30px;
+  box-shadow: 0 -24px 60px rgba(15, 23, 42, 0.26);
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  max-height: 86dvh;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  animation: sheetUp 0.22s ease-out;
 }
 
 .sheetHeader {
-  padding: 10px 12px;
+  position: relative;
   display: grid;
-  grid-template-columns: 24px 1fr 24px;
+  grid-template-columns: 40px 1fr 40px;
   align-items: center;
+  gap: 8px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
 }
+
 .grabber {
-  width: 28px; height: 4px;
-  background: #e6edf0; border-radius: 999px; justify-self: center;
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 44px;
+  height: 5px;
+  transform: translateX(-50%);
+  background: #cbd5e1;
+  border-radius: 999px;
 }
-.sheetTitle { text-align: center; font-weight: 900; color: #0f2410; }
+
+.sheetTitle {
+  grid-column: 2;
+  margin: 12px 0 0;
+  text-align: center;
+  font-weight: 950;
+  color: #0f172a;
+  font-size: 1.05rem;
+  letter-spacing: -0.025em;
+}
+
 .closeBtn {
-  border: 1px solid #e6edf0; background: #f6f8fa;
-  border-radius: 8px; width: 28px; height: 28px;
+  grid-column: 3;
+  margin-top: 8px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 14px;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-weight: 950;
+  cursor: pointer;
 }
+
+/* ===============================
+   SHEET BODY
+   =============================== */
 
 .sheetBody {
-  padding: 8px 12px;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 14px;
   display: grid;
-  gap: 8px;
-  overflow: auto;
+  gap: 12px;
+  background: #ffffff;
 }
-.field { display: grid; gap: 4px; }
-.label { font-size: .86rem; color: #345; }
-.input, .textarea {
-  border: 1px solid #e6edf0; border-radius: 10px; padding: 8px 10px;
-  font-size: .94rem; outline: none;
+
+.field {
+  display: grid;
+  gap: 6px;
 }
-.textarea { resize: vertical; }
 
-.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.label {
+  font-size: 0.84rem;
+  color: #334155;
+  font-weight: 850;
+}
 
-.mapWrap { border: 1px solid #e6edf0; border-radius: 12px; overflow: hidden; }
-.map { width: 100%; height: 180px; }
+.input,
+.textarea {
+  width: 100%;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 0.94rem;
+  font-weight: 650;
+  outline: none;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
 
-.coords { display: grid; gap: 2px; font-size: .82rem; color: #456; }
+.input {
+  height: 48px;
+  padding: 0 14px;
+}
 
-.chk { display: grid; grid-auto-flow: column; gap: 8px; align-items: center; color: #234; }
+.textarea {
+  min-height: 76px;
+  padding: 12px 14px;
+  resize: vertical;
+  line-height: 1.35;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: #94a3b8;
+  font-weight: 550;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: #22c55e;
+  background: #ffffff;
+  box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.12);
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+/* ===============================
+   MAPA
+   =============================== */
+
+.mapWrap {
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 22px;
+  overflow: hidden;
+  background: #e2e8f0;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.map {
+  width: 100%;
+  height: 190px;
+}
+
+.coords {
+  min-height: 48px;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  padding: 9px 11px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 750;
+}
+
+/* ===============================
+   CHECKBOX
+   =============================== */
+
+.chk {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 12px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.chk input {
+  width: 18px;
+  height: 18px;
+  accent-color: #16a34a;
+}
+
+/* ===============================
+   SHEET ACTIONS
+   =============================== */
 
 .sheetActions {
-  display: grid; grid-template-columns: 1fr 1.2fr; gap: 10px;
-  padding: 10px 12px 14px; border-top: 1px solid #eef2f5; background: #fff;
-}
-.cancelBtn {
-  padding: 10px; border-radius: 12px; font-weight: 800;
-  background: #f3f5f7; color: #223; border: 1px solid #e6eaef;
-}
-.saveBtn {
-  padding: 10px; border-radius: 12px; font-weight: 800;
-  background: linear-gradient(180deg, #2e7d32, #1b5e20);
-  color: #fff; border: 1px solid #1b5e20;
-  box-shadow: 0 6px 14px rgba(27,94,32,.18);
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 10px;
+  padding:
+    12px
+    14px
+    max(14px, env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(226, 232, 240, 0.95);
+  background: rgba(255, 255, 255, 0.98);
 }
 
-/* ==== Animación de swap visual (mejorada) ==== */
+.cancelBtn,
+.saveBtn {
+  min-height: 50px;
+  border: none;
+  border-radius: 17px;
+  font-size: 0.92rem;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.cancelBtn {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.saveBtn {
+  background: linear-gradient(135deg, #57d70a 0%, #22c55e 45%, #15803d 100%);
+  color: #ffffff;
+  box-shadow: 0 14px 26px rgba(22, 163, 74, 0.22);
+}
+
+.cancelBtn:active,
+.saveBtn:active {
+  transform: scale(0.985);
+}
+
+/* ===============================
+   ANIMACIONES DE SWAP
+   =============================== */
+
 .cardWrap {
-  position: relative;             /* para stacking y transform */
+  position: relative;
   will-change: transform, opacity, filter;
   overflow: visible;
 }
 
 .animPick {
-  z-index: 2;                     /* por encima del resto */
-  animation: pickUp .52s cubic-bezier(.22,.9,.24,1) forwards;
-  filter: drop-shadow(0 12px 24px rgba(0,0,0,.12));
+  z-index: 2;
+  animation: pickUp 0.46s cubic-bezier(.22, .9, .24, 1) forwards;
+  filter: drop-shadow(0 12px 24px rgba(15, 23, 42, 0.12));
+}
+
+.animDrop {
+  animation: dropIn 0.48s cubic-bezier(.16, .84, .44, 1) both;
+  filter: drop-shadow(0 8px 18px rgba(15, 23, 42, 0.1));
 }
 
 @keyframes pickUp {
-  0%   { transform: translateY(0) scale(1); opacity: 1; }
-  60%  { transform: translateY(calc(-130% - 12px)) scale(.98); opacity: .8; }
-  100% { transform: translateY(calc(-150% - 12px)) scale(.96); opacity: 0; }
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  60% {
+    transform: translateY(calc(-120% - 10px)) scale(0.98);
+    opacity: 0.82;
+  }
+
+  100% {
+    transform: translateY(calc(-135% - 10px)) scale(0.96);
+    opacity: 0;
+  }
 }
 
-/* La actual hace un drop más perceptible */
-.animDrop {
-  animation: dropIn .54s cubic-bezier(.16,.84,.44,1) both;
-  filter: drop-shadow(0 8px 18px rgba(0,0,0,.10));
-}
 @keyframes dropIn {
-  0%   { transform: translateY(-14px); opacity: 0; }
-  60%  { transform: translateY(2px);   opacity: 1; }
-  100% { transform: translateY(0);     opacity: 1; }
+  0% {
+    transform: translateY(-12px);
+    opacity: 0;
+  }
+
+  65% {
+    transform: translateY(2px);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes sheetUp {
+  from {
+    transform: translateY(22px);
+    opacity: 0.86;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ===============================
+   RESPONSIVE
+   =============================== */
+
+@media (min-width: 620px) {
+  .header,
+  .main {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .main {
+    justify-content: center;
+  }
+
+  .group {
+    width: min(620px, 100%);
+    justify-self: center;
+  }
+
+  .actionBar {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .sheet {
+    left: 50%;
+    right: auto;
+    bottom: 18px;
+    width: min(540px, calc(100% - 36px));
+    max-height: min(820px, calc(100dvh - 36px));
+    transform: translateX(-50%);
+    border-radius: 30px;
+  }
+
+  .overlay {
+    padding: 18px;
+  }
+
+  .row2 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .map {
+    height: 220px;
+  }
+}
+
+@media (max-width: 390px) {
+  .header {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .title {
+    font-size: 1.2rem;
+  }
+
+  .subtitle {
+    font-size: 0.82rem;
+  }
+
+  .main {
+    padding-left: 12px;
+    padding-right: 12px;
+    gap: 12px;
+  }
+
+  .sheet {
+    border-top-left-radius: 26px;
+    border-top-right-radius: 26px;
+    max-height: 92dvh;
+  }
+
+  .sheetBody {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .sheetActions {
+    grid-template-columns: 1fr;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .map {
+    height: 170px;
+  }
+
+  .addBtn {
+    min-height: 50px;
+    border-radius: 17px;
+  }
+}
+
+@media (max-height: 680px) {
+  .header {
+    padding-top: max(10px, env(safe-area-inset-top));
+    padding-bottom: 7px;
+  }
+
+  .title {
+    font-size: 1.12rem;
+  }
+
+  .subtitle {
+    font-size: 0.78rem;
+  }
+
+  .map {
+    height: 150px;
+  }
+
+  .sheetBody {
+    gap: 10px;
+  }
+
+  .input {
+    height: 45px;
+  }
+
+  .textarea {
+    min-height: 62px;
+  }
+
+  .cancelBtn,
+  .saveBtn {
+    min-height: 47px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animPick,
+  .animDrop,
+  .sheet {
+    animation-duration: 0.18s;
+    animation-timing-function: linear;
+  }
 }

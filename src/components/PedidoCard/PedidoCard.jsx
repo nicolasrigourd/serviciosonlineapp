@@ -4,68 +4,126 @@ import styles from "./PedidoCard.module.css";
 /**
  * props:
  * - pedido: { id, createdAt, status, serviceType, origin, destination, km, price }
+ * - isCurrent?: boolean
  * - onVer(id)
  * - onCancelar(id)
  * - onRepetir(pedido)
  * - onEliminar(id)
  */
-export default function PedidoCard({ pedido, onVer, onCancelar, onRepetir, onEliminar }) {
+export default function PedidoCard({
+  pedido,
+  isCurrent,
+  onVer,
+  onCancelar,
+  onRepetir,
+  onEliminar,
+}) {
   const fecha = useMemo(() => {
     try {
+      if (!pedido?.createdAt) return "—";
+
       const d = new Date(pedido.createdAt);
-      return d.toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
-    } catch { return "—"; }
-  }, [pedido.createdAt]);
 
-  const price = Number(pedido.price || 0);
-  const km = Number(pedido.km || 0);
+      if (Number.isNaN(d.getTime())) return "—";
 
-  const estado = String(pedido.status || "pendiente");
+      return d.toLocaleString("es-AR", {
+        dateStyle: "short",
+        timeStyle: "short",
+      });
+    } catch {
+      return "—";
+    }
+  }, [pedido?.createdAt]);
+
+  const price = Number(pedido?.price || pedido?.breakdown?.total || 0);
+  const km = Number(pedido?.km || pedido?.breakdown?.km || 0);
+
+  const estado = String(pedido?.status || "pendiente").toLowerCase();
   const estadoInfo = getEstadoInfo(estado);
 
+  const serviceType = formatServiceType(pedido?.serviceType || pedido?.service || "");
+  const shortId = getShortId(pedido?.id);
+
+  const canCancel = ["pendiente", "buscando", "ofertando", "ofertado"].includes(
+    estado
+  );
+
+  const canRepeat = [
+    "cancelado",
+    "rechazado",
+    "entregado",
+    "completado",
+    "finalizado",
+    "asignado",
+    "en_camino",
+    "en_curso",
+  ].includes(estado);
+
+  const canDelete = ["cancelado", "rechazado"].includes(estado);
+
   return (
-    <article className={styles.card} aria-label={`Pedido ${pedido.id}`}>
-      {/* Header */}
+    <article
+      className={`${styles.card} ${isCurrent ? styles.cardCurrent : ""}`}
+      aria-label={`Pedido ${pedido?.id || ""}`}
+    >
       <header className={styles.head}>
-        <div className={styles.left}>
-          <div className={`${styles.badge} ${styles[estadoInfo.className]}`}>
+        <div className={styles.statusGroup}>
+          <span className={`${styles.badge} ${styles[estadoInfo.className]}`}>
+            <span className={styles.badgeDot} />
             {estadoInfo.label}
-          </div>
-          {pedido.serviceType && (
-            <span className={styles.type}>{String(pedido.serviceType).toUpperCase()}</span>
-          )}
+          </span>
+
+          {isCurrent && <span className={styles.currentBadge}>Actual</span>}
         </div>
-        <div className={styles.right}>
-          <span className={styles.id}>#{pedido.id}</span>
-          <span className={styles.date}>{fecha}</span>
+
+        <div className={styles.orderMeta}>
+          <strong>{shortId}</strong>
+          <span>{fecha}</span>
         </div>
       </header>
 
-      {/* Body */}
-      <div className={styles.body}>
-        <div className={styles.row}>
-          <span className={styles.k}>Origen</span>
-          <span className={styles.v}>{pedido.origin || "—"}</span>
+      <div className={styles.routeBox}>
+        <div className={styles.routeItem}>
+          <span className={`${styles.routeDot} ${styles.originDot}`} />
+          <div>
+            <small>Origen</small>
+            <p>{pedido?.origin || pedido?.originInput || "—"}</p>
+          </div>
         </div>
-        <div className={styles.row}>
-          <span className={styles.k}>Destino</span>
-          <span className={styles.v}>{pedido.destination || "—"}</span>
-        </div>
-        <div className={styles.metaRow}>
-          <span className={styles.metaI}>⟂ {km ? `${km} km` : "—"}</span>
-          <span className={styles.metaI}>▣ {pedido.serviceType || "—"}</span>
+
+        <div className={styles.routeLine} />
+
+        <div className={styles.routeItem}>
+          <span className={`${styles.routeDot} ${styles.destinationDot}`} />
+          <div>
+            <small>Destino</small>
+            <p>{pedido?.destination || pedido?.destinationInput || "—"}</p>
+          </div>
         </div>
       </div>
 
-      {/* Footer */}
+      <div className={styles.infoRow}>
+        <div className={styles.infoPill}>
+          {distanceIcon}
+          <span>{km ? `${km.toFixed(2)} km` : "Distancia —"}</span>
+        </div>
+
+        <div className={styles.infoPill}>
+          {serviceIcon}
+          <span>{serviceType || "Servicio —"}</span>
+        </div>
+      </div>
+
       <footer className={styles.foot}>
         <div className={styles.total}>
-          <span className={styles.totalK}>Total</span>
-          <span className={styles.totalV}>{price ? `$${price.toLocaleString("es-AR")}` : "—"}</span>
+          <span>Total</span>
+          <strong>
+            {price ? `$${price.toLocaleString("es-AR")}` : "—"}
+          </strong>
         </div>
 
         <div className={styles.actions}>
-          {["pendiente", "buscando"].includes(estado) && (
+          {canCancel && (
             <button
               className={styles.btnGhost}
               type="button"
@@ -76,7 +134,7 @@ export default function PedidoCard({ pedido, onVer, onCancelar, onRepetir, onEli
             </button>
           )}
 
-          {["cancelado", "rechazado", "entregado", "completado", "asignado", "en_camino"].includes(estado) && (
+          {canRepeat && (
             <button
               className={styles.btnGhost}
               type="button"
@@ -96,7 +154,7 @@ export default function PedidoCard({ pedido, onVer, onCancelar, onRepetir, onEli
             Ver
           </button>
 
-          {["cancelado", "rechazado"].includes(estado) && (
+          {canDelete && (
             <button
               className={styles.btnDanger}
               type="button"
@@ -116,17 +174,84 @@ function getEstadoInfo(status) {
   switch (status) {
     case "pendiente":
     case "buscando":
-      return { label: "En curso", className: "on" };
+    case "ofertando":
+    case "ofertado":
+      return { label: "Pendiente", className: "pending" };
+
     case "asignado":
-    case "en_camino":
       return { label: "Asignado", className: "assigned" };
+
+    case "en_camino":
+    case "en_curso":
+    case "en curso":
+    case "encurso":
+      return { label: "En curso", className: "active" };
+
     case "entregado":
     case "completado":
+    case "finalizado":
       return { label: "Finalizado", className: "done" };
+
     case "cancelado":
     case "rechazado":
       return { label: "Cancelado", className: "cancel" };
+
     default:
-      return { label: status, className: "on" };
+      return { label: status || "Pendiente", className: "pending" };
   }
 }
+
+function formatServiceType(value) {
+  const text = String(value || "").trim();
+
+  if (!text) return "";
+
+  const map = {
+    simple: "Simple",
+    box: "Box",
+    bigbox: "BigBox",
+    valores: "Valores",
+    delivery: "Delivery",
+  };
+
+  return map[text.toLowerCase()] || text;
+}
+
+function getShortId(id) {
+  const text = String(id || "").trim();
+
+  if (!text) return "#—";
+
+  if (text.length <= 12) return `#${text}`;
+
+  return `#${text.slice(-8)}`;
+}
+
+const distanceIcon = (
+  <svg
+    viewBox="0 0 24 24"
+    width="15"
+    height="15"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <path d="M6 19c-2 0-3-1.2-3-2.7C3 14.7 4.2 14 6 14h12c1.8 0 3-.7 3-2.3C21 10.2 20 9 18 9H6" />
+    <circle cx="6" cy="19" r="2" />
+    <circle cx="18" cy="9" r="2" />
+  </svg>
+);
+
+const serviceIcon = (
+  <svg
+    viewBox="0 0 24 24"
+    width="15"
+    height="15"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <path d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+    <path d="M3.27 6.96L12 12l8.73-5.04" />
+  </svg>
+);

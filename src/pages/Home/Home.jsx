@@ -7,38 +7,74 @@ import { useAuth } from "../../state/AuthProvider";
 import styles from "./Home.module.css";
 import HomeActionCard from "../../components/HomeActionCard/HomeActionCard";
 
+function getCachedUser() {
+  try {
+    return JSON.parse(localStorage.getItem("SessionUser") || "null");
+  } catch {
+    return null;
+  }
+}
+
+function hasActiveOrderInStorage() {
+  try {
+    const raw = localStorage.getItem("NuevoPedido");
+    if (!raw) return false;
+
+    const pedido = JSON.parse(raw);
+    if (!pedido) return false;
+
+    const status = String(pedido.status || "").toLowerCase();
+    const currentStep = String(pedido.currentStep || "").toLowerCase();
+
+    if (status === "finalizado") return false;
+    if (status === "cancelado") return false;
+    if (currentStep === "delivered") return false;
+
+    return Boolean(pedido.id || pedido.orderId);
+  } catch {
+    return false;
+  }
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const auth = useAuth();
   const { user: ctxUser } = auth || {};
+  const { setService, setOrigin } = useFlow();
 
   const [profileOpen, setProfileOpen] = useState(false);
+  const [hasActiveOrder, setHasActiveOrder] = useState(() =>
+    hasActiveOrderInStorage()
+  );
+
   const profileMenuRef = useRef(null);
 
-  const cachedUser = (() => {
-    try {
-      return JSON.parse(localStorage.getItem("SessionUser") || "null");
-    } catch {
-      return null;
-    }
-  })();
-
+  const cachedUser = getCachedUser();
   const user = ctxUser || cachedUser;
 
-  const { addrLabel, addrLat, addrLng } = useMemo(() => {
-    if (!user) return { addrLabel: "", addrLat: null, addrLng: null };
+  const { addrLabel, addrLat, addrLng, addrExtra } = useMemo(() => {
+    if (!user) {
+      return {
+        addrLabel: "",
+        addrLat: null,
+        addrLng: null,
+        addrExtra: "",
+      };
+    }
 
     if (Array.isArray(user.addresses) && user.addresses.length) {
       const def = user.addresses.find((a) => a?.isDefault) || user.addresses[0];
 
-      const label = def?.address
-        ? def.address + (def?.piso ? `, ${def.piso}` : "")
-        : "";
+      const base = def?.address || "";
+      const piso = def?.piso ? `, ${def.piso}` : "";
+      const descripcion = def?.descripcion ? def.descripcion : "";
+      const referencia = def?.referencia ? def.referencia : "";
 
       return {
-        addrLabel: label,
+        addrLabel: base ? `${base}${piso}` : "",
         addrLat: def?.lat ?? null,
         addrLng: def?.lng ?? null,
+        addrExtra: descripcion || referencia || "",
       };
     }
 
@@ -47,10 +83,16 @@ export default function Home() {
         addrLabel: user.direccion,
         addrLat: null,
         addrLng: null,
+        addrExtra: user.direccionDescripcion || user.direccionReferencia || "",
       };
     }
 
-    return { addrLabel: "", addrLat: null, addrLng: null };
+    return {
+      addrLabel: "",
+      addrLat: null,
+      addrLng: null,
+      addrExtra: "",
+    };
   }, [user]);
 
   const greeting = user ? `¡Hola, ${user.nombre || user.username}!` : "¡Hola!";
@@ -60,7 +102,8 @@ export default function Home() {
     user?.username?.charAt(0)?.toUpperCase() ||
     "U";
 
-  const { setService, setOrigin } = useFlow();
+  const hasUsableAddress =
+    Boolean(addrLabel) && addrLat != null && addrLng != null;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -79,18 +122,21 @@ export default function Home() {
     };
   }, []);
 
-  const pickService = (type, surcharge) => {
-    setService(type, surcharge);
+  useEffect(() => {
+    const refreshActiveOrder = () => {
+      setHasActiveOrder(hasActiveOrderInStorage());
+    };
 
-    setOrigin(
-      addrLabel || "",
-      addrLat != null && addrLng != null
-        ? { lat: addrLat, lng: addrLng }
-        : null
-    );
+    refreshActiveOrder();
 
-    navigate("/flow/enviar");
-  };
+    window.addEventListener("storage", refreshActiveOrder);
+    window.addEventListener("focus", refreshActiveOrder);
+
+    return () => {
+      window.removeEventListener("storage", refreshActiveOrder);
+      window.removeEventListener("focus", refreshActiveOrder);
+    };
+  }, []);
 
   const goAddresses = () => {
     setProfileOpen(false);
@@ -100,6 +146,31 @@ export default function Home() {
   const goProfile = () => {
     setProfileOpen(false);
     navigate("/perfil");
+  };
+
+  const pickService = (type, surcharge) => {
+    if (!addrLabel) {
+      alert("Primero agregá una dirección principal para poder pedir un envío.");
+      navigate("/direcciones");
+      return;
+    }
+
+    if (!hasUsableAddress) {
+      alert(
+        "Tu dirección no tiene ubicación GPS confirmada. Actualizala para poder calcular el envío correctamente."
+      );
+      navigate("/direcciones");
+      return;
+    }
+
+    setService(type, surcharge);
+
+    setOrigin(addrLabel, {
+      lat: addrLat,
+      lng: addrLng,
+    });
+
+    navigate("/flow/enviar");
   };
 
   const handleLogout = async () => {
@@ -138,12 +209,12 @@ export default function Home() {
       image: "/imgs/services/simple.png",
       icon: simpleIcon,
       surcharge: 0,
-      badge: "Oferta",
+      badge: "Rápido",
     },
     {
       key: "box",
       title: "Box",
-      desc: "Paquetes ≤ 10 kg",
+      desc: "Hasta 10 kg",
       tone: "neutral",
       icon: boxIcon,
       surcharge: 0.07,
@@ -151,7 +222,7 @@ export default function Home() {
     {
       key: "bigbox",
       title: "BigBox",
-      desc: "Paquetes ≤ 20 kg",
+      desc: "Hasta 20 kg",
       tone: "neutral",
       icon: bigBoxIcon,
       surcharge: 0.12,
@@ -227,7 +298,7 @@ export default function Home() {
               <span>
                 {addrLabel
                   ? "Tu cadetería online está activa"
-                  : "Elegí una dirección para comenzar"}
+                  : "Agregá una dirección para comenzar"}
               </span>
             </div>
 
@@ -239,98 +310,44 @@ export default function Home() {
               Mis direcciones
             </button>
           </header>
-
-          <div className={styles.topIntro}>
-            <span className={styles.topKicker}>Cadetería online</span>
-            <h1>Pedí tu envío en minutos</h1>
-            <p>
-              Elegí un servicio, confirmá tu dirección y coordinamos el pedido
-              con un cadete disponible.
-            </p>
-          </div>
         </section>
 
         <section className={styles.homeContent}>
           <div className={styles.homeLayout}>
-            <button
-              type="button"
-              className={styles.addrBtn}
-              onClick={goAddresses}
-              title="Dirección actual"
-            >
-              <span className={styles.addrIcon} aria-hidden="true">
-                {pinIcon}
-              </span>
+            <div className={styles.addrStickyWrap}>
+              <button
+                type="button"
+                className={`${styles.addrBtn} ${
+                  !hasUsableAddress ? styles.addrBtnWarning : ""
+                }`}
+                onClick={goAddresses}
+                title="Dirección actual"
+              >
+                <span className={styles.addrIcon} aria-hidden="true">
+                  {pinIcon}
+                </span>
 
-              <span className={styles.addrText}>
-                <strong>Dirección actual</strong>
-                <span>{addrLabel || "Elegí tu dirección principal"}</span>
-              </span>
+                <span className={styles.addrText}>
+                  <strong>Dirección actual</strong>
+                  <span>{addrLabel || "Elegí tu dirección principal"}</span>
+                  {addrExtra && <em>{addrExtra}</em>}
+                </span>
 
-              <span className={styles.addrChevron} aria-hidden="true">
-                {chevIcon}
-              </span>
-            </button>
-
-            <section className={styles.carouselSection} aria-label="Promociones">
-              <div className={styles.carouselTrack}>
-                <article className={styles.carouselCard}>
-                  <div>
-                    <span>Rápido y simple</span>
-                    <h2>Enviá documentos, llaves o paquetes chicos</h2>
-                    <p>Ideal para gestiones rápidas dentro de la ciudad.</p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => pickService("simple", 0)}
-                  >
-                    Enviar ahora
-                  </button>
-                </article>
-
-                <article className={styles.carouselCard}>
-                  <div>
-                    <span>Delivery</span>
-                    <h2>Retiro y entrega de comidas</h2>
-                    <p>Coordinamos con cadetes disponibles cerca de tu zona.</p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => pickService("delivery", 0.07)}
-                  >
-                    Pedir delivery
-                  </button>
-                </article>
-
-                <article className={styles.carouselCard}>
-                  <div>
-                    <span>Seguro</span>
-                    <h2>Envíos de valores o elementos delicados</h2>
-                    <p>Una opción pensada para envíos que requieren cuidado.</p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => pickService("valores", 0.2)}
-                  >
-                    Ver opción
-                  </button>
-                </article>
-              </div>
-            </section>
+                <span className={styles.addrChevron} aria-hidden="true">
+                  {chevIcon}
+                </span>
+              </button>
+            </div>
 
             <section
-              className={styles.homeBottomSheet}
+              className={styles.servicesPanel}
               aria-label="Tipos de envío"
             >
-              <div className={styles.homeSheetHandle} />
-
-              <div className={styles.homeSheetHeader}>
+              <div className={styles.servicesHeader}>
                 <div>
-                  <h2>Servicios</h2>
-                  <p>Elegí qué necesitás enviar</p>
+                  <span className={styles.sectionKicker}>Servicios</span>
+                  <h1>¿Qué necesitás enviar?</h1>
+                  <p>Elegí el tipo de pedido para continuar.</p>
                 </div>
               </div>
 
@@ -350,6 +367,60 @@ export default function Home() {
               </div>
             </section>
 
+            <section className={styles.carouselSection} aria-label="Novedades">
+              <div className={styles.carouselHeader}>
+                <span>Novedades</span>
+                <strong>Opciones rápidas</strong>
+              </div>
+
+              <div className={styles.carouselTrack}>
+                <article className={styles.carouselCard}>
+                  <div>
+                    <span>Rápido</span>
+                    <h2>Enviá documentos o llaves</h2>
+                    <p>Ideal para gestiones dentro de la ciudad.</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => pickService("simple", 0)}
+                  >
+                    Enviar
+                  </button>
+                </article>
+
+                <article className={styles.carouselCard}>
+                  <div>
+                    <span>Delivery</span>
+                    <h2>Retiro de comidas</h2>
+                    <p>Coordinamos con cadetes disponibles.</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => pickService("delivery", 0.07)}
+                  >
+                    Pedir
+                  </button>
+                </article>
+
+                <article className={styles.carouselCard}>
+                  <div>
+                    <span>Seguro</span>
+                    <h2>Valores o delicados</h2>
+                    <p>Para envíos que requieren más cuidado.</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => pickService("valores", 0.2)}
+                  >
+                    Ver
+                  </button>
+                </article>
+              </div>
+            </section>
+
             <section className={styles.infoBanner} aria-label="Información">
               <div className={styles.infoIcon}>{clockIcon}</div>
 
@@ -362,7 +433,8 @@ export default function Home() {
         </section>
       </main>
 
-      <ActiveOrderSheet />
+      {hasActiveOrder && <ActiveOrderSheet />}
+
       <BottomNav />
     </div>
   );
