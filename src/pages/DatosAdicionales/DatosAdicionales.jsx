@@ -1,11 +1,32 @@
-// src/pages/DatosAdicionales/DatosAdicionales.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useFlow } from "../../state/FlowContext";
 import { useNavigate } from "react-router-dom";
 import styles from "./DatosAdicionales.module.css";
 
 import { auth, db } from "../../services/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+
+function onlyDigits(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function formatMoney(value) {
+  const number = Number(value || 0);
+  if (!number) return "—";
+  return `$${number.toLocaleString("es-AR")}`;
+}
+
+function formatService(value) {
+  const map = {
+    simple: "Simple",
+    box: "Box",
+    bigbox: "BigBox",
+    valores: "Valores",
+    delivery: "Delivery",
+  };
+
+  return map[String(value || "").toLowerCase()] || "Envío";
+}
 
 export default function DatosAdicionales() {
   const {
@@ -32,23 +53,8 @@ export default function DatosAdicionales() {
   const [userName, setUserName] = useState("");
   const [userPhone, setUserPhone] = useState("");
 
-  const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("SessionUser");
-      const u = raw ? JSON.parse(raw) : null;
-      setUserName(
-        [u?.nombre, u?.apellido].filter(Boolean).join(" ") ||
-          u?.username ||
-          "Usuario"
-      );
-      setUserPhone(u?.telefono || "");
-    } catch {
-      setUserName("Usuario");
-      setUserPhone("");
-    }
-  }, []);
+  const [origenNombre, setOrigenNombre] = useState("");
+  const [origenTelefono, setOrigenTelefono] = useState("");
 
   const [destNombre, setDestNombre] = useState(state.recipientName || "");
   const [destTelefono, setDestTelefono] = useState(state.recipientPhone || "");
@@ -56,67 +62,122 @@ export default function DatosAdicionales() {
   const [notaOrigen, setNotaOrigen] = useState(state.notesFrom || "");
   const [notaDestino, setNotaDestino] = useState(state.notesTo || "");
 
-  const IAddr = (
-    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" className={styles.icon}>
-      <path fill="none" stroke="currentColor" strokeWidth="2" d="M12 21s-6-4.35-6-10a6 6 0 1 1 12 0c-0 5.65-6 10-6 10z"/>
-      <circle cx="12" cy="11" r="2.2" fill="currentColor"/>
-    </svg>
-  );
+  const [submitting, setSubmitting] = useState(false);
+  const [localError, setLocalError] = useState("");
 
-  const IUser = (
-    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" className={styles.icon}>
-      <circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" strokeWidth="2"/>
-      <path d="M6 20a6 6 0 0 1 12 0" fill="none" stroke="currentColor" strokeWidth="2"/>
-    </svg>
-  );
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("SessionUser");
+      const u = raw ? JSON.parse(raw) : null;
 
-  const IPhone = (
-    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" className={styles.icon}>
-      <path d="M22 16.92v2a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.1 1.9h2a2 2 0 0 1 2 1.72 12.66 12.66 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.1 9.9a16 16 0 0 0 6 6l1.36-1.26a2 2 0 0 1 2.11-.45 12.66 12.66 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" fill="none" stroke="currentColor" strokeWidth="2"/>
-    </svg>
-  );
+      const nombre =
+        [u?.nombre, u?.apellido].filter(Boolean).join(" ") ||
+        u?.username ||
+        "Usuario";
 
-  const IFloor = (
-    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" className={styles.icon}>
-      <rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/>
-      <path d="M8 3v18M16 3v18M3 8h18M3 16h18" fill="none" stroke="currentColor" strokeWidth="2"/>
-    </svg>
-  );
+      const telefono = u?.telefono || "";
 
-  const INote = (
-    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" className={styles.icon}>
-      <path d="M4 4h12l4 4v12a2 2 0 0 1-2 2H4z" fill="none" stroke="currentColor" strokeWidth="2"/>
-      <path d="M16 4v4h4" fill="none" stroke="currentColor" strokeWidth="2"/>
-    </svg>
-  );
+      setUserName(nombre);
+      setUserPhone(telefono);
 
-  const precio =
-    state.price && Number(state.price) > 0
-      ? Number(state.price)
-      : Math.round((Number(state.km) || 0) * 1000);
+      setOrigenNombre((prev) => prev || nombre);
+      setOrigenTelefono((prev) => prev || telefono);
+    } catch {
+      setUserName("Usuario");
+      setUserPhone("");
+      setOrigenNombre((prev) => prev || "Usuario");
+      setOrigenTelefono((prev) => prev || "");
+    }
+  }, []);
+
+  const precio = useMemo(() => {
+    if (state.price && Number(state.price) > 0) return Number(state.price);
+
+    if (state.quote?.total && Number(state.quote.total) > 0) {
+      return Number(state.quote.total);
+    }
+
+    return Math.round((Number(state.km) || 0) * 1000);
+  }, [state.price, state.quote, state.km]);
+
+  const serviceLabel = formatService(state.serviceType);
+
+  const canSubmit =
+    !submitting &&
+    Boolean(state.origin) &&
+    Boolean(state.destination) &&
+    Boolean(origenNombre.trim()) &&
+    Boolean(onlyDigits(origenTelefono)) &&
+    Boolean(destNombre.trim()) &&
+    Boolean(onlyDigits(destTelefono));
+
+  const validate = () => {
+    if (!state.origin) return "Falta la dirección de origen.";
+    if (!state.destination) return "Falta la dirección de destino.";
+
+    if (!origenNombre.trim()) {
+      return "Indicá quién entregará el pedido en origen.";
+    }
+
+    if (!onlyDigits(origenTelefono)) {
+      return "Indicá un teléfono de contacto en origen.";
+    }
+
+    if (onlyDigits(origenTelefono).length < 6) {
+      return "El teléfono de origen parece incompleto.";
+    }
+
+    if (!destNombre.trim()) {
+      return "Indicá quién recibirá en destino.";
+    }
+
+    if (!onlyDigits(destTelefono)) {
+      return "Indicá un teléfono de contacto en destino.";
+    }
+
+    if (onlyDigits(destTelefono).length < 6) {
+      return "El teléfono de destino parece incompleto.";
+    }
+
+    return "";
+  };
 
   const handleSolicitar = async () => {
     if (submitting) return;
 
-    if (!state.origin) return alert("Falta la dirección de origen.");
-    if (!state.destination) return alert("Falta la dirección de destino.");
-    if (!destNombre.trim()) return alert("Indicá quién recibirá en destino.");
-    if (!destTelefono.trim()) return alert("Indicá un teléfono de contacto en destino.");
+    const validationError = validate();
+
+    if (validationError) {
+      setLocalError(validationError);
+      return;
+    }
+
+    const senderName = origenNombre.trim();
+    const senderPhone = onlyDigits(origenTelefono);
+
+    const recipientName = destNombre.trim();
+    const recipientPhone = onlyDigits(destTelefono);
+    const floor = destPisoDpto.trim();
+
+    const noteFrom = notaOrigen.trim();
+    const noteTo = notaDestino.trim();
+
+    setLocalError("");
 
     // Persistimos en context antes de construir la orden
-    setRecipientName?.(destNombre.trim());
-    setRecipientPhone?.(destTelefono.trim());
-    setContactTo?.(destTelefono.trim());
-    setNotesFrom?.(notaOrigen.trim());
-    setNotesTo?.(notaDestino.trim());
-    setDropoffApt?.(destPisoDpto.trim());
+    setRecipientName?.(recipientName);
+    setRecipientPhone?.(recipientPhone);
+    setContactTo?.(recipientPhone);
+    setNotesFrom?.(noteFrom);
+    setNotesTo?.(noteTo);
+    setDropoffApt?.(floor);
 
     // Compat
-    setContact?.(destTelefono.trim());
+    setContact?.(recipientPhone);
     setNotes?.(
       [
-        notaOrigen ? `ORIGEN: ${notaOrigen}` : "",
-        notaDestino ? `DESTINO: ${notaDestino}` : "",
+        noteFrom ? `ORIGEN: ${noteFrom}` : "",
+        noteTo ? `DESTINO: ${noteTo}` : "",
       ]
         .filter(Boolean)
         .join(" | ")
@@ -127,7 +188,6 @@ export default function DatosAdicionales() {
 
       let order = buildOrder?.(su) || {};
 
-      // Reforzamos el contrato profesional del pedido
       order = {
         ...order,
 
@@ -151,34 +211,39 @@ export default function DatosAdicionales() {
             : true,
         priority: order.priority || "normal",
 
-        customerUid: auth.currentUser?.uid || order.customerUid || order.userId || null,
+        customerUid:
+          auth.currentUser?.uid || order.customerUid || order.userId || null,
         userId: auth.currentUser?.uid || order.userId || null,
+
         customerPhone: order.customerPhone || su?.telefono || "",
 
         price: Number(order.price || 0) > 0 ? Number(order.price) : precio,
 
-        paymentMethod:
-          order.paymentMethod === "digital" ? "digital" : "cash",
-        requiresCashHandling:
-          order.paymentMethod === "digital" ? false : true,
+        paymentMethod: order.paymentMethod === "digital" ? "digital" : "cash",
+        requiresCashHandling: order.paymentMethod === "digital" ? false : true,
 
-        contactFrom: order.contactFrom || su?.telefono || "",
-        contactTo: destTelefono.trim(),
+        contactFrom: senderPhone,
+        contactTo: recipientPhone,
 
-        dropoffApt: destPisoDpto.trim(),
-
-        recipient: {
-          name: destNombre.trim(),
-          phone: destTelefono.trim(),
-          floor: destPisoDpto.trim(),
+        sender: {
+          name: senderName,
+          phone: senderPhone,
         },
 
-        notesFrom: (notaOrigen || "").trim(),
-        notesTo: (notaDestino || "").trim(),
+        dropoffApt: floor,
+
+        recipient: {
+          name: recipientName,
+          phone: recipientPhone,
+          floor,
+        },
+
+        notesFrom: noteFrom,
+        notesTo: noteTo,
 
         notes: {
-          origen: (notaOrigen || "").trim(),
-          destino: (notaDestino || "").trim(),
+          origen: noteFrom,
+          destino: noteTo,
         },
 
         assignedCadeteId: null,
@@ -210,7 +275,7 @@ export default function DatosAdicionales() {
       navigate("/flow/checkout");
     } catch (e) {
       console.error(e);
-      alert("No se pudo crear el pedido. Intentá nuevamente.");
+      setLocalError("No se pudo crear el pedido. Intentá nuevamente.");
     } finally {
       setSubmitting(false);
     }
@@ -219,125 +284,189 @@ export default function DatosAdicionales() {
   return (
     <div className={styles.screen}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Datos adicionales</h1>
+        <button
+          type="button"
+          className={styles.backBtn}
+          onClick={() => navigate(-1)}
+          aria-label="Volver"
+        >
+          ←
+        </button>
+
+        <div className={styles.headerText}>
+          <h1 className={styles.title}>Datos adicionales</h1>
+          <p className={styles.subtitle}>Completá los contactos del envío.</p>
+        </div>
+
         {state.serviceType && (
-          <span className={styles.badge}>
-            {state.serviceType.toUpperCase()}
-          </span>
+          <span className={styles.badge}>{serviceLabel}</span>
         )}
       </header>
 
       <main className={styles.main}>
-        <section className={styles.card} aria-label="Origen">
-          <h2 className={styles.cardTitle}>Origen</h2>
+        {localError && (
+          <div className={styles.error} role="alert">
+            {localError}
+          </div>
+        )}
 
-          <div className={`${styles.row} ${styles.rowIcon}`}>
-            <span className={styles.rowIco}>{IAddr}</span>
-            <label className={styles.key}>Dirección</label>
-            <div className={styles.val}>{state.origin || "—"}</div>
+        <section className={styles.card} aria-label="Origen">
+          <div className={styles.cardHeader}>
+            <div className={styles.cardIcon}>{pinIcon}</div>
+
+            <div className={styles.cardTitleBlock}>
+              <h2 className={styles.cardTitle}>Origen</h2>
+              <p className={styles.cardText}>Datos para retirar el pedido.</p>
+            </div>
           </div>
 
-          <div className={styles.row2col}>
-            <div className={styles.col}>
-              <div className={`${styles.subrow} ${styles.rowIcon}`}>
-                <span className={styles.rowIco}>{IUser}</span>
-                <label className={styles.key}>Nombre</label>
-              </div>
-              <div className={styles.val}>{userName || "—"}</div>
+          <div className={styles.addressBox}>
+            <span className={styles.addressIcon}>{pinIcon}</span>
+
+            <div className={styles.addressText}>
+              <span>Dirección de retiro</span>
+              <strong>{state.origin || "—"}</strong>
+            </div>
+          </div>
+
+          <div className={styles.row2}>
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="origenNombre">
+                Nombre de quien entrega
+              </label>
+              <input
+                id="origenNombre"
+                className={styles.input}
+                type="text"
+                placeholder="Nombre y apellido"
+                value={origenNombre}
+                onChange={(e) => {
+                  setOrigenNombre(e.target.value);
+                  setLocalError("");
+                }}
+              />
             </div>
 
-            <div className={styles.col}>
-              <div className={`${styles.subrow} ${styles.rowIcon}`}>
-                <span className={styles.rowIco}>{IPhone}</span>
-                <label className={styles.key}>Teléfono</label>
-              </div>
-              <div className={styles.val}>{userPhone || "—"}</div>
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="origenTel">
+                Teléfono de origen
+              </label>
+              <input
+                id="origenTel"
+                className={styles.input}
+                type="tel"
+                inputMode="numeric"
+                placeholder="Sin 0 y sin 15"
+                value={origenTelefono}
+                onChange={(e) => {
+                  setOrigenTelefono(e.target.value);
+                  setLocalError("");
+                }}
+              />
             </div>
           </div>
 
           <div className={styles.field}>
-            <label className={`${styles.label} ${styles.rowIcon}`}>
-              <span className={styles.rowIco}>{INote}</span>
+            <label className={styles.label} htmlFor="notaOrigen">
               ¿Querés aclarar algo al repartidor?
             </label>
             <textarea
+              id="notaOrigen"
               className={styles.textarea}
-              placeholder="Ej: Timbre roto, portería de 8 a 12..."
+              placeholder="Ej: tocar timbre, retirar en recepción, preguntar por Ana..."
               value={notaOrigen}
               onChange={(e) => setNotaOrigen(e.target.value)}
               rows={2}
               maxLength={160}
             />
+            <div className={styles.counter}>{notaOrigen.length}/160</div>
           </div>
         </section>
 
         <section className={styles.card} aria-label="Destino">
-          <h2 className={styles.cardTitle}>Destino</h2>
+          <div className={styles.cardHeader}>
+            <div className={styles.cardIcon}>{destinationIcon}</div>
 
-          <div className={`${styles.row} ${styles.rowIcon}`}>
-            <span className={styles.rowIco}>{IAddr}</span>
-            <label className={styles.key}>Dirección</label>
-            <div className={styles.val}>{state.destination || "—"}</div>
+            <div className={styles.cardTitleBlock}>
+              <h2 className={styles.cardTitle}>Destino</h2>
+              <p className={styles.cardText}>Datos para entregar el pedido.</p>
+            </div>
+          </div>
+
+          <div className={styles.addressBox}>
+            <span className={styles.addressIcon}>{destinationIcon}</span>
+
+            <div className={styles.addressText}>
+              <span>Dirección de entrega</span>
+              <strong>{state.destination || "—"}</strong>
+            </div>
+          </div>
+
+          <div className={styles.row2}>
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="destNombre">
+                ¿Quién recibirá?
+              </label>
+              <input
+                id="destNombre"
+                className={styles.input}
+                type="text"
+                placeholder="Nombre y apellido"
+                value={destNombre}
+                onChange={(e) => {
+                  setDestNombre(e.target.value);
+                  setLocalError("");
+                }}
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="destTel">
+                Teléfono de contacto
+              </label>
+              <input
+                id="destTel"
+                className={styles.input}
+                type="tel"
+                inputMode="numeric"
+                placeholder="Sin 0 y sin 15"
+                value={destTelefono}
+                onChange={(e) => {
+                  setDestTelefono(e.target.value);
+                  setLocalError("");
+                }}
+              />
+            </div>
           </div>
 
           <div className={styles.field}>
-            <label className={`${styles.label} ${styles.rowIcon}`} htmlFor="destNombre">
-              <span className={styles.rowIco}>{IUser}</span>
-              ¿Quién recibirá?
-            </label>
-            <input
-              id="destNombre"
-              className={styles.input}
-              type="text"
-              placeholder="Nombre y apellido"
-              value={destNombre}
-              onChange={(e) => setDestNombre(e.target.value)}
-            />
-          </div>
-
-          <div className={styles.field}>
-            <label className={`${styles.label} ${styles.rowIcon}`} htmlFor="destTel">
-              <span className={styles.rowIco}>{IPhone}</span>
-              Teléfono de contacto
-            </label>
-            <input
-              id="destTel"
-              className={styles.input}
-              type="tel"
-              placeholder="Ej: 11 2345 6789"
-              value={destTelefono}
-              onChange={(e) => setDestTelefono(e.target.value)}
-            />
-          </div>
-
-          <div className={styles.field}>
-            <label className={`${styles.label} ${styles.rowIcon}`} htmlFor="destPiso">
-              <span className={styles.rowIco}>{IFloor}</span>
-              Piso / Dpto (opcional)
+            <label className={styles.label} htmlFor="destPiso">
+              Piso / Dpto / referencia interna
             </label>
             <input
               id="destPiso"
               className={styles.input}
               type="text"
-              placeholder="Ej: 7 B"
+              placeholder="Ej: 7 B, local 3, casa del fondo"
               value={destPisoDpto}
               onChange={(e) => setDestPisoDpto(e.target.value)}
             />
           </div>
 
           <div className={styles.field}>
-            <label className={`${styles.label} ${styles.rowIcon}`}>
-              <span className={styles.rowIco}>{INote}</span>
+            <label className={styles.label} htmlFor="notaDestino">
               ¿Aclaraciones para el repartidor?
             </label>
             <textarea
+              id="notaDestino"
               className={styles.textarea}
-              placeholder="Ej: Dejar en recepción, llamar antes de llegar..."
+              placeholder="Ej: dejar en recepción, llamar antes de llegar..."
               value={notaDestino}
               onChange={(e) => setNotaDestino(e.target.value)}
               rows={2}
               maxLength={160}
             />
+            <div className={styles.counter}>{notaDestino.length}/160</div>
           </div>
         </section>
       </main>
@@ -345,16 +474,14 @@ export default function DatosAdicionales() {
       <footer className={styles.footer}>
         <div className={styles.priceWrap}>
           <span className={styles.priceLabel}>Precio</span>
-          <span className={styles.priceValue}>
-            {precio > 0 ? `$${precio.toLocaleString("es-AR")}` : "—"}
-          </span>
+          <span className={styles.priceValue}>{formatMoney(precio)}</span>
         </div>
 
         <button
           className={styles.primaryBtn}
           type="button"
           onClick={handleSolicitar}
-          disabled={submitting}
+          disabled={submitting || !canSubmit}
         >
           {submitting ? "Creando pedido…" : "Confirmar pedido"}
         </button>
@@ -362,3 +489,32 @@ export default function DatosAdicionales() {
     </div>
   );
 }
+
+const pinIcon = (
+  <svg
+    viewBox="0 0 24 24"
+    width="19"
+    height="19"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <path d="M12 21s-6-4.35-6-10a6 6 0 1 1 12 0c0 5.65-6 10-6 10z" />
+    <circle cx="12" cy="11" r="2.5" />
+  </svg>
+);
+
+const destinationIcon = (
+  <svg
+    viewBox="0 0 24 24"
+    width="19"
+    height="19"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="12" cy="12" r="3" />
+    <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
+  </svg>
+);

@@ -21,7 +21,7 @@ import {
 } from "firebase/firestore";
 
 // Components
-import AdressMapPicker from "../../components/AddressMapPicker/AddressMapPicker";
+import AdressMapPicker from "../../components/AdressMapPicker/AdressMapPicker";
 
 export default function Register() {
   const navigate = useNavigate();

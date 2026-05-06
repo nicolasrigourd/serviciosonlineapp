@@ -25,7 +25,7 @@
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 205px;
+  min-height: 185px;
   border-radius: 28px;
   overflow: hidden;
   background: #e2e8f0;
@@ -70,7 +70,6 @@
 }
 
 .mapHint strong {
-  min-width: 0;
   color: #0f172a;
   font-size: 0.84rem;
   font-weight: 950;
@@ -101,12 +100,9 @@
   box-sizing: border-box;
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  max-height: 49dvh;
-  overflow: hidden;
-}
 
-.sheetWithQuote {
-  max-height: 66dvh;
+  max-height: 58dvh;
+  overflow: hidden;
 }
 
 .grabber {
@@ -140,7 +136,7 @@
 .sheetHeader h1 {
   margin: 0;
   color: #0f172a;
-  font-size: 1.14rem;
+  font-size: 1.18rem;
   line-height: 1.08;
   font-weight: 950;
   letter-spacing: -0.035em;
@@ -151,9 +147,8 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   display: grid;
-  align-content: start;
-  gap: 10px;
-  padding-bottom: 2px;
+  gap: 11px;
+  padding-bottom: 4px;
 }
 
 .field {
@@ -201,13 +196,12 @@
 
 .inputActionRow {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 1fr auto;
   gap: 8px;
 }
 
 .input {
   width: 100%;
-  min-width: 0;
   height: 48px;
   padding: 0 14px;
   border-radius: 16px;
@@ -236,7 +230,7 @@
 }
 
 .mapBtn {
-  min-width: 92px;
+  min-width: 78px;
   height: 48px;
   border: none;
   border-radius: 16px;
@@ -280,94 +274,65 @@
 }
 
 /* ===============================
-   RESUMEN DE PRECIO
+   PRECIO AUTOMÁTICO
    =============================== */
-
-.quoteSection {
-  display: grid;
-  gap: 10px;
-  animation: quoteIn 0.22s ease-out;
-}
 
 .quoteBox {
   display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
   gap: 12px;
-  padding: 13px;
+  padding: 12px;
   border-radius: 22px;
-  background:
-    radial-gradient(circle at top left, rgba(34, 197, 94, 0.12), transparent 34%),
-    #ffffff;
-  border: 1px solid rgba(34, 197, 94, 0.24);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-}
-
-.quoteMain {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.quoteMain span {
-  color: #64748b;
-  font-size: 0.78rem;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.quoteMain strong {
-  color: #15803d;
-  font-size: 1.45rem;
-  line-height: 1;
-  font-weight: 1000;
-  letter-spacing: -0.045em;
-}
-
-.quoteMeta {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.quoteMeta div {
-  display: grid;
-  gap: 3px;
-  min-width: 0;
-  padding: 9px;
-  border-radius: 16px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
 }
 
-.quoteMeta span {
-  color: #94a3b8;
-  font-size: 0.66rem;
-  font-weight: 950;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.quoteBoxReady {
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.12), transparent 34%),
+    #ffffff;
+  border-color: rgba(34, 197, 94, 0.24);
 }
 
-.quoteMeta strong {
+.quoteInfo {
   min-width: 0;
-  color: #0f172a;
-  font-size: 0.78rem;
-  line-height: 1.15;
+  display: grid;
+  gap: 3px;
+}
+
+.quoteInfo span {
+  color: #15803d;
+  font-size: 0.7rem;
   font-weight: 950;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.quoteInfo strong {
+  color: #0f172a;
+  font-size: 1.35rem;
+  line-height: 1;
+  font-weight: 1000;
+  letter-spacing: -0.04em;
+}
+
+.quoteInfo small {
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  font-weight: 700;
 }
 
 .nextBtn {
-  width: 100%;
-  min-height: 50px;
+  min-width: 112px;
+  height: 50px;
   border: none;
-  border-radius: 18px;
+  border-radius: 17px;
   padding: 0 15px;
   background: linear-gradient(135deg, #57d70a 0%, #22c55e 45%, #15803d 100%);
   color: #ffffff;
-  font-size: 0.94rem;
+  font-size: 0.92rem;
   font-weight: 950;
   box-shadow:
     0 14px 26px rgba(22, 163, 74, 0.24),
@@ -375,20 +340,11 @@
   cursor: pointer;
 }
 
-.nextBtn:active {
-  transform: scale(0.985);
-}
-
-@keyframes quoteIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.nextBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+  background: #cbd5e1;
 }
 
 /* ===============================
@@ -415,11 +371,7 @@
     border-radius: 30px;
     border: 1px solid rgba(226, 232, 240, 0.95);
     padding: 12px 16px 16px;
-    max-height: 60dvh;
-  }
-
-  .sheetWithQuote {
-    max-height: 68dvh;
+    max-height: 56dvh;
   }
 }
 
@@ -431,7 +383,7 @@
 
   .mapWrap {
     border-radius: 24px;
-    min-height: 170px;
+    min-height: 165px;
   }
 
   .mapHint {
@@ -455,36 +407,13 @@
     padding-left: 12px;
     padding-right: 12px;
     gap: 9px;
-    max-height: 54dvh;
-  }
-
-  .sheetWithQuote {
-    max-height: 72dvh;
+    max-height: 62dvh;
   }
 
   .sheetHeader h1 {
-    font-size: 1.04rem;
+    font-size: 1.08rem;
   }
 
-  .inputActionRow {
-    grid-template-columns: 1fr auto;
-  }
-
-  .mapBtn {
-    min-width: 86px;
-  }
-
-  .input {
-    height: 46px;
-    font-size: 0.9rem;
-  }
-
-  .quoteMeta {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 340px) {
   .inputActionRow {
     grid-template-columns: 1fr;
   }
@@ -492,6 +421,18 @@
   .mapBtn {
     width: 100%;
     height: 44px;
+  }
+
+  .input {
+    height: 46px;
+  }
+
+  .quoteBox {
+    grid-template-columns: 1fr;
+  }
+
+  .nextBtn {
+    width: 100%;
   }
 }
 
@@ -502,18 +443,14 @@
   }
 
   .mapWrap {
-    min-height: 130px;
+    min-height: 135px;
     border-radius: 22px;
   }
 
   .sheet {
-    max-height: 58dvh;
+    max-height: 66dvh;
     gap: 8px;
     padding-top: 8px;
-  }
-
-  .sheetWithQuote {
-    max-height: 76dvh;
   }
 
   .sheetHeader h1 {
@@ -536,30 +473,19 @@
     display: none;
   }
 
-  .quoteBox {
-    padding: 11px;
-    gap: 9px;
-  }
-
-  .quoteMain strong {
-    font-size: 1.22rem;
-  }
-
-  .quoteMeta div {
-    padding: 8px;
+  .quoteInfo strong {
+    font-size: 1.18rem;
   }
 
   .nextBtn {
-    min-height: 46px;
+    height: 46px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .input,
   .mapBtn,
-  .nextBtn,
-  .quoteSection {
+  .nextBtn {
     transition: none;
-    animation: none;
   }
 }

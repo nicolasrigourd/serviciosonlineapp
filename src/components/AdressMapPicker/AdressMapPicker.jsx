@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { loadGoogleMaps } from "../../lib/googleMapsLoader";
-import styles from "./AddressMapPicker.module.css"
+import styles from "./AdressMapPicker.module.css"
 const DEFAULT_CENTER = {
   lat: -27.7833574,
   lng: -64.264167,
