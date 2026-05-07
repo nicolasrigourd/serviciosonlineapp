@@ -17,32 +17,37 @@
 }
 
 /* ===============================
-   STAGE SUPERIOR COMPACTO
+   HERO SUPERIOR NEGRO
    =============================== */
 
 .topStage {
   position: relative;
-  min-height: 112px;
-  max-height: 132px;
+  min-height: 205px;
+  max-height: 235px;
   overflow: visible;
-  padding: calc(12px + env(safe-area-inset-top)) 14px 18px;
+  padding:
+    calc(12px + env(safe-area-inset-top))
+    14px
+    28px;
   box-sizing: border-box;
   background:
-    radial-gradient(circle at 18% 22%, rgba(34, 197, 94, 0.22), transparent 30%),
-    radial-gradient(circle at 86% 8%, rgba(15, 23, 42, 0.08), transparent 32%),
-    linear-gradient(180deg, #eef7ef 0%, #e8eee9 100%);
+    radial-gradient(circle at 14% 18%, rgba(87, 215, 10, 0.18), transparent 28%),
+    radial-gradient(circle at 86% 30%, rgba(87, 215, 10, 0.1), transparent 34%),
+    linear-gradient(145deg, #050607 0%, #101216 62%, #050607 100%);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 64px;
 }
 
 .topStage::before {
   content: "";
   position: absolute;
   inset: -40px;
-  opacity: 0.25;
+  opacity: 0.18;
   background-image:
-    linear-gradient(rgba(17, 24, 39, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(17, 24, 39, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
   background-size: 42px 42px;
-  transform: rotate(-8deg) scale(1.15);
+  transform: rotate(-8deg) scale(1.16);
   pointer-events: none;
 }
 
@@ -50,24 +55,24 @@
 .topGlowTwo {
   position: absolute;
   border-radius: 999px;
-  filter: blur(8px);
+  filter: blur(12px);
   pointer-events: none;
 }
 
 .topGlowOne {
-  width: 130px;
-  height: 130px;
-  left: 18px;
-  bottom: -24px;
-  background: rgba(34, 197, 94, 0.18);
+  width: 160px;
+  height: 160px;
+  left: -36px;
+  bottom: -44px;
+  background: rgba(87, 215, 10, 0.18);
 }
 
 .topGlowTwo {
-  width: 110px;
-  height: 110px;
-  right: 20px;
-  top: 52px;
-  background: rgba(15, 23, 42, 0.06);
+  width: 140px;
+  height: 140px;
+  right: -30px;
+  top: 70px;
+  background: rgba(87, 215, 10, 0.11);
 }
 
 /* ===============================
@@ -79,15 +84,17 @@
   z-index: 30;
   min-height: 66px;
   display: grid;
-  grid-template-columns: 48px 1fr auto;
+  grid-template-columns: 48px minmax(0, 1fr) 46px;
   align-items: center;
   gap: 11px;
   padding: 9px 10px;
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.93);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 14px 35px rgba(17, 24, 39, 0.12);
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
 .profileWrapper {
@@ -136,7 +143,7 @@
 
 .homeHeaderInfo strong {
   color: #111827;
-  font-size: 0.98rem;
+  font-size: 1rem;
   line-height: 1.1;
   font-weight: 950;
   white-space: nowrap;
@@ -144,30 +151,117 @@
   text-overflow: ellipsis;
 }
 
-.homeHeaderInfo span {
-  color: #6b7280;
-  font-size: 0.76rem;
-  line-height: 1.15;
+.notificationBtn {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border: none;
+  border-radius: 17px;
+  display: grid;
+  place-items: center;
+  background: #f1f5f9;
+  color: #111827;
+  cursor: pointer;
+}
+
+.notificationBtn:active {
+  transform: scale(0.96);
+}
+
+.notificationDot {
+  position: absolute;
+  top: 11px;
+  right: 12px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #57d70a;
+  box-shadow: 0 0 0 3px rgba(87, 215, 10, 0.18);
+}
+
+/* ===============================
+   DIRECCIÓN INTEGRADA AL HERO
+   =============================== */
+
+.heroAddress {
+  position: relative;
+  z-index: 20;
+  width: 100%;
+  margin-top: 18px;
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 11px;
+  border: none;
+  border-radius: 0;
+  padding: 4px 4px 4px 2px;
+  background: transparent;
+  color: #ffffff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.heroAddress:active {
+  transform: scale(0.992);
+}
+
+.heroAddressIcon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: #57d70a;
+}
+
+.heroAddressText {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.heroAddressText strong {
+  display: block;
+  color: #57d70a;
+  font-size: 0.72rem;
+  line-height: 1;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.heroAddressText span {
+  display: block;
+  color: #ffffff;
+  font-size: 0.92rem;
+  line-height: 1.13;
+  font-weight: 950;
+  letter-spacing: -0.035em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.heroAddressText em {
+  display: block;
+  color: rgba(255, 255, 255, 0.72);
+  font-style: normal;
+  font-size: 0.8rem;
+  line-height: 1.12;
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.homeHeaderAction {
-  border: none;
-  border-radius: 999px;
-  padding: 9px 12px;
-  background: #111827;
-  color: #ffffff;
-  font-weight: 850;
-  font-size: 0.78rem;
-  cursor: pointer;
-  white-space: nowrap;
+.heroAddressChevron {
+  display: grid;
+  place-items: center;
+  color: #57d70a;
 }
 
-.homeHeaderAction:active {
-  transform: scale(0.98);
+.heroAddressWarning .heroAddressText span {
+  color: #fef3c7;
 }
 
 /* ===============================
@@ -182,10 +276,10 @@
   width: 218px;
   padding: 8px;
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.97);
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 22px 48px rgba(17, 24, 39, 0.18);
+  box-shadow: 0 22px 48px rgba(17, 24, 39, 0.22);
   border: 1px solid rgba(17, 24, 39, 0.06);
   display: grid;
   gap: 4px;
@@ -258,8 +352,8 @@
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 0 14px calc(86px + env(safe-area-inset-bottom));
-  margin-top: -12px;
+  padding: 14px 14px calc(86px + env(safe-area-inset-bottom));
+  margin-top: -22px;
   z-index: 6;
 }
 
@@ -271,104 +365,6 @@
   gap: 12px;
   padding-bottom: 10px;
   box-sizing: border-box;
-}
-
-/* ===============================
-   DIRECCIÓN STICKY
-   =============================== */
-
-.addrStickyWrap {
-  position: sticky;
-  top: 8px;
-  z-index: 50;
-}
-
-.addrBtn {
-  width: 100%;
-  min-height: 60px;
-  display: grid;
-  grid-template-columns: 42px 1fr 22px;
-  align-items: center;
-  gap: 10px;
-  border: none;
-  border-radius: 23px;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.96);
-  color: #111827;
-  text-align: left;
-  cursor: pointer;
-  box-shadow:
-    0 18px 42px rgba(17, 24, 39, 0.13),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  transition: transform 0.15s ease, background 0.15s ease;
-}
-
-.addrBtn:active {
-  transform: scale(0.985);
-  background: #f8fafc;
-}
-
-.addrBtnWarning {
-  border: 1px solid rgba(245, 158, 11, 0.45);
-}
-
-.addrIcon {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  border-radius: 17px;
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.addrText {
-  min-width: 0;
-  display: grid;
-  gap: 2px;
-  color: #111827;
-  line-height: 1.15;
-}
-
-.addrText strong {
-  display: block;
-  color: #6b7280;
-  font-size: 0.7rem;
-  line-height: 1.1;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.addrText span {
-  display: block;
-  color: #111827;
-  font-size: 0.9rem;
-  line-height: 1.15;
-  font-weight: 950;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.addrText em {
-  display: block;
-  color: #64748b;
-  font-style: normal;
-  font-size: 0.74rem;
-  line-height: 1.12;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.addrChevron {
-  display: grid;
-  place-items: center;
-  color: #111827;
 }
 
 /* ===============================
@@ -613,13 +609,15 @@
 
 @media (max-width: 390px) {
   .topStage {
-    min-height: 106px;
+    min-height: 198px;
+    max-height: 222px;
     padding-left: 10px;
     padding-right: 10px;
+    border-bottom-right-radius: 52px;
   }
 
   .homeFloatingHeader {
-    grid-template-columns: 44px 1fr auto;
+    grid-template-columns: 44px minmax(0, 1fr) 42px;
     border-radius: 22px;
     min-height: 62px;
     padding: 8px;
@@ -637,16 +635,36 @@
   }
 
   .homeHeaderInfo strong {
-    font-size: 0.9rem;
+    font-size: 0.92rem;
   }
 
-  .homeHeaderInfo span {
-    font-size: 0.7rem;
+  .notificationBtn {
+    width: 42px;
+    height: 42px;
+    border-radius: 15px;
   }
 
-  .homeHeaderAction {
-    padding: 8px 10px;
-    font-size: 0.7rem;
+  .heroAddress {
+    margin-top: 15px;
+    min-height: 68px;
+    grid-template-columns: 32px minmax(0, 1fr) 22px;
+  }
+
+  .heroAddressIcon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .heroAddressText strong {
+    font-size: 0.68rem;
+  }
+
+  .heroAddressText span {
+    font-size: 0.90rem;
+  }
+
+  .heroAddressText em {
+    font-size: 0.74rem;
   }
 
   .profileMenu {
@@ -656,27 +674,7 @@
   .homeContent {
     padding-left: 10px;
     padding-right: 10px;
-  }
-
-  .addrBtn {
-    min-height: 58px;
-    grid-template-columns: 40px 1fr 20px;
-    border-radius: 21px;
-    padding: 9px 10px;
-  }
-
-  .addrIcon {
-    width: 40px;
-    height: 40px;
-    border-radius: 16px;
-  }
-
-  .addrText strong {
-    font-size: 0.66rem;
-  }
-
-  .addrText span {
-    font-size: 0.84rem;
+    margin-top: -20px;
   }
 
   .servicesPanel {
@@ -694,12 +692,6 @@
 }
 
 @media (max-width: 360px) {
-  .homeHeaderAction {
-    max-width: 112px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
   .actionsGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -735,13 +727,18 @@
 
 @media (max-height: 680px) {
   .topStage {
-    min-height: 102px;
-    max-height: 118px;
-    padding-bottom: 16px;
+    min-height: 182px;
+    max-height: 205px;
+    padding-bottom: 24px;
   }
 
   .homeFloatingHeader {
     min-height: 60px;
+  }
+
+  .heroAddress {
+    margin-top: 12px;
+    min-height: 62px;
   }
 
   .servicesHeader h1 {
@@ -757,13 +754,19 @@
   .topStage {
     padding-left: 18px;
     padding-right: 18px;
+    border-bottom-right-radius: 76px;
   }
 
   .homeFloatingHeader,
+  .heroAddress,
   .homeLayout {
     max-width: 920px;
     margin-left: auto;
     margin-right: auto;
+  }
+
+  .heroAddress {
+    margin-top: 18px;
   }
 
   .homeContent {

@@ -148,6 +148,12 @@ export default function Home() {
     navigate("/perfil");
   };
 
+  const goNotifications = () => {
+    // Por ahora queda preparado para futuras notificaciones.
+    // Si después creamos la ruta, cambiamos esto por navigate("/notificaciones").
+    console.log("[HOME] Notificaciones pendiente de implementar");
+  };
+
   const pickService = (type, surcharge) => {
     if (!addrLabel) {
       alert("Primero agregá una dirección principal para poder pedir un envío.");
@@ -295,50 +301,45 @@ export default function Home() {
 
             <div className={styles.homeHeaderInfo}>
               <strong>{greeting}</strong>
-              <span>
-                {addrLabel
-                  ? "Tu cadetería online está activa"
-                  : "Agregá una dirección para comenzar"}
-              </span>
             </div>
 
             <button
               type="button"
-              className={styles.homeHeaderAction}
-              onClick={goAddresses}
+              className={styles.notificationBtn}
+              onClick={goNotifications}
+              aria-label="Notificaciones"
             >
-              Mis direcciones
+              {bellIcon}
+              <span className={styles.notificationDot} aria-hidden="true" />
             </button>
           </header>
+
+          <button
+            type="button"
+            className={`${styles.heroAddress} ${
+              !hasUsableAddress ? styles.heroAddressWarning : ""
+            }`}
+            onClick={goAddresses}
+            title="Dirección actual"
+          >
+            <span className={styles.heroAddressIcon} aria-hidden="true">
+              {pinIcon}
+            </span>
+
+            <span className={styles.heroAddressText}>
+              <strong>Dirección actual</strong>
+              <span>{addrLabel || "Elegí tu dirección principal"}</span>
+              {addrExtra && <em>{addrExtra}</em>}
+            </span>
+
+            <span className={styles.heroAddressChevron} aria-hidden="true">
+              {chevIcon}
+            </span>
+          </button>
         </section>
 
         <section className={styles.homeContent}>
           <div className={styles.homeLayout}>
-            <div className={styles.addrStickyWrap}>
-              <button
-                type="button"
-                className={`${styles.addrBtn} ${
-                  !hasUsableAddress ? styles.addrBtnWarning : ""
-                }`}
-                onClick={goAddresses}
-                title="Dirección actual"
-              >
-                <span className={styles.addrIcon} aria-hidden="true">
-                  {pinIcon}
-                </span>
-
-                <span className={styles.addrText}>
-                  <strong>Dirección actual</strong>
-                  <span>{addrLabel || "Elegí tu dirección principal"}</span>
-                  {addrExtra && <em>{addrExtra}</em>}
-                </span>
-
-                <span className={styles.addrChevron} aria-hidden="true">
-                  {chevIcon}
-                </span>
-              </button>
-            </div>
-
             <section
               className={styles.servicesPanel}
               aria-label="Tipos de envío"
@@ -464,6 +465,20 @@ const chevIcon = (
     strokeWidth="2"
   >
     <path d="M9 18l6-6-6-6" />
+  </svg>
+);
+
+const bellIcon = (
+  <svg
+    viewBox="0 0 24 24"
+    width="20"
+    height="20"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 8h18s-3-1-3-8" />
+    <path d="M10.3 21a2 2 0 0 0 3.4 0" />
   </svg>
 );
 
