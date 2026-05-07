@@ -210,7 +210,7 @@ export default function Home() {
     {
       key: "simple",
       title: "Enviar",
-      
+      desc:"Articulos Pequeños",
       tone: "neutral",
       image: "/imgs/services/envios.webp",
       icon: simpleIcon,
@@ -222,6 +222,7 @@ export default function Home() {
       title: "Retirar",
       desc: "Hasta 10 kg",
       tone: "neutral",
+      image: "/imgs/services/retiros.webp",
       icon: boxIcon,
       surcharge: 0.07,
     },
