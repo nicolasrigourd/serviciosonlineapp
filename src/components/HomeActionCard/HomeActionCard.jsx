@@ -18,6 +18,7 @@ export default function HomeActionCard({
         styles.card,
         styles[`tone_${tone}`],
         disabled ? styles.disabled : "",
+        image ? styles.hasImage : styles.onlyIcon,
       ].join(" ")}
       onClick={disabled ? undefined : onClick}
       aria-label={title}
@@ -25,16 +26,19 @@ export default function HomeActionCard({
     >
       {!!badge && <span className={styles.badge}>{badge}</span>}
 
-      <span className={styles.iconStage} aria-hidden="true">
+      <span className={styles.mediaStage} aria-hidden="true">
         {image ? (
           <img className={styles.serviceImage} src={image} alt="" />
         ) : (
-          icon
+          <span className={styles.iconWrap}>{icon}</span>
         )}
       </span>
 
-      <span className={styles.cardTitle}>{title}</span>
-      <span className={styles.cardDesc}>{desc}</span>
+      <span className={styles.textBlock}>
+        <span className={styles.cardTitle}>{title}</span>
+
+        {desc ? <span className={styles.cardDesc}>{desc}</span> : null}
+      </span>
     </button>
   );
 }

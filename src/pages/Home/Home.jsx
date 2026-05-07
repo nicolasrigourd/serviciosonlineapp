@@ -209,17 +209,17 @@ export default function Home() {
   const actions = [
     {
       key: "simple",
-      title: "Simple",
-      desc: "Llaves o papeles",
+      title: "Enviar",
+      
       tone: "neutral",
-      image: "/imgs/services/simple.png",
+      image: "/imgs/services/envios.webp",
       icon: simpleIcon,
       surcharge: 0,
-      badge: "Rápido",
+     
     },
     {
       key: "box",
-      title: "Box",
+      title: "Retirar",
       desc: "Hasta 10 kg",
       tone: "neutral",
       icon: boxIcon,

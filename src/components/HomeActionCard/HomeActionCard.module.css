@@ -1,54 +1,69 @@
 .card {
   position: relative;
   width: 100%;
-  min-height: 104px;
+  min-height: 168px;
 
   border: none;
-  border-radius: 8px;
-  background: #f3f3f3;
+  border-radius: 24px;
+  background: #f4f4f5;
 
-  padding: 8px 6px 7px;
+  padding: 12px 10px 13px;
 
   display: grid;
-  grid-template-rows: 1fr auto auto;
-  align-items: center;
+  grid-template-rows: minmax(104px, 1fr) auto;
+  align-items: end;
   justify-items: center;
+  gap: 8px;
 
-  color: #111111;
+  color: #111827;
   text-align: center;
 
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 
+  overflow: hidden;
   box-shadow: none;
+
   transition:
     transform 0.12s ease,
-    background 0.12s ease;
+    background 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: auto -34px -52px auto;
+  width: 118px;
+  height: 118px;
+  border-radius: 999px;
+  background: rgba(87, 215, 10, 0.09);
+  pointer-events: none;
 }
 
 .card:hover {
-  background: #eeeeee;
+  background: #eeeeef;
 }
 
 .card:active {
-  transform: scale(0.97);
-  background: #e7e7e7;
+  transform: scale(0.975);
+  background: #e9e9eb;
 }
 
 .card:focus-visible {
-  outline: 3px solid rgba(0, 0, 0, 0.13);
+  outline: 3px solid rgba(87, 215, 10, 0.35);
   outline-offset: 2px;
 }
 
 .badge {
   position: absolute;
-  top: -7px;
-  left: 6px;
-  z-index: 2;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
 
-  min-height: 18px;
-  padding: 2px 7px;
+  min-height: 22px;
+  padding: 0 9px;
 
   display: inline-flex;
   align-items: center;
@@ -58,49 +73,78 @@
   background: #0a8f43;
   color: #ffffff;
 
-  font-size: 0.58rem;
+  font-size: 0.62rem;
   line-height: 1;
-  font-weight: 900;
+  font-weight: 950;
   letter-spacing: -0.01em;
 
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 7px 14px rgba(0, 0, 0, 0.14);
 }
 
-.iconStage {
+.mediaStage {
+  position: relative;
+  z-index: 2;
+
   width: 100%;
-  min-height: 80px;
+  min-height: 108px;
 
   display: grid;
   place-items: center;
 
-  color: #111111;
-}
-
-.iconStage {
-  width: 100%;
-  min-height: 76px;
-
-  display: grid;
-  place-items: center;
-
-  color: #111111;
+  color: #111827;
 }
 
 .serviceImage {
-  width: 120px;
-  height: 120px;
+  width: min(138px, 92%);
+  height: 116px;
   object-fit: contain;
   display: block;
-  filter: drop-shadow(0 5px 6px rgba(0, 0, 0, 0.18));
+
+  transform: translateY(4px) scale(1.08);
+  filter: drop-shadow(0 12px 13px rgba(0, 0, 0, 0.18));
+}
+
+.iconWrap {
+  width: 76px;
+  height: 76px;
+  border-radius: 24px;
+
+  display: grid;
+  place-items: center;
+
+  background: #ffffff;
+  color: #111827;
+  box-shadow:
+    0 10px 22px rgba(17, 24, 39, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.iconWrap svg {
+  width: 38px;
+  height: 38px;
+  stroke-width: 2.2;
+}
+
+.textBlock {
+  position: relative;
+  z-index: 3;
+
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+  gap: 4px;
+  justify-items: center;
 }
 
 .cardTitle {
   width: 100%;
 
-  color: #111111;
-  font-size: 0.76rem;
+  color: #080b12;
+  font-size: 1rem;
   line-height: 1.05;
-  font-weight: 900;
+  font-weight: 1000;
+  letter-spacing: -0.035em;
 
   white-space: nowrap;
   overflow: hidden;
@@ -109,12 +153,11 @@
 
 .cardDesc {
   width: 100%;
-  margin-top: 4px;
 
-  color: #555555;
-  font-size: 0.65rem;
-  line-height: 1.05;
-  font-weight: 650;
+  color: #4b5563;
+  font-size: 0.74rem;
+  line-height: 1.1;
+  font-weight: 750;
 
   white-space: nowrap;
   overflow: hidden;
@@ -122,7 +165,19 @@
 }
 
 .tone_neutral {
-  background: #f3f3f3;
+  background: #f4f4f5;
+}
+
+.hasImage .mediaStage {
+  min-height: 112px;
+}
+
+.hasImage .cardTitle {
+  margin-top: -2px;
+}
+
+.onlyIcon .mediaStage {
+  min-height: 104px;
 }
 
 .disabled {
@@ -132,64 +187,115 @@
 }
 
 .disabled:hover {
-  background: #f3f3f3;
+  background: #f4f4f5;
 }
 
 .disabled:active {
   transform: none;
 }
 
-@media (max-width: 360px) {
+@media (max-width: 390px) {
   .card {
-    min-height: 96px;
-    padding: 7px 5px 6px;
-    border-radius: 8px;
+    min-height: 158px;
+    border-radius: 22px;
+    padding: 11px 9px 12px;
+    grid-template-rows: minmax(96px, 1fr) auto;
   }
 
-  .iconStage {
-    min-height: 46px;
-  }
-
-  .iconStage svg {
-    width: 36px;
-    height: 36px;
+  .mediaStage {
+    min-height: 98px;
   }
 
   .serviceImage {
-    width: 48px;
-    height: 48px;
+    width: min(126px, 94%);
+    height: 104px;
+  }
+
+  .iconWrap {
+    width: 68px;
+    height: 68px;
+    border-radius: 22px;
+  }
+
+  .iconWrap svg {
+    width: 34px;
+    height: 34px;
   }
 
   .cardTitle {
-    font-size: 0.72rem;
+    font-size: 0.94rem;
   }
 
   .cardDesc {
-    font-size: 0.6rem;
+    font-size: 0.7rem;
   }
 
   .badge {
-    font-size: 0.54rem;
-    padding: 2px 6px;
+    top: 7px;
+    left: 7px;
+    min-height: 20px;
+    padding: 0 8px;
+    font-size: 0.58rem;
+  }
+}
+
+@media (max-width: 350px) {
+  .card {
+    min-height: 146px;
+    border-radius: 20px;
+  }
+
+  .mediaStage {
+    min-height: 88px;
+  }
+
+  .serviceImage {
+    width: min(112px, 94%);
+    height: 92px;
+  }
+
+  .iconWrap {
+    width: 62px;
+    height: 62px;
+    border-radius: 20px;
+  }
+
+  .iconWrap svg {
+    width: 31px;
+    height: 31px;
+  }
+
+  .cardTitle {
+    font-size: 0.88rem;
+  }
+
+  .cardDesc {
+    font-size: 0.66rem;
   }
 }
 
 @media (max-height: 700px) {
   .card {
-    min-height: 94px;
+    min-height: 148px;
   }
 
-  .iconStage {
-    min-height: 43px;
-  }
-
-  .iconStage svg {
-    width: 34px;
-    height: 34px;
+  .mediaStage {
+    min-height: 92px;
   }
 
   .serviceImage {
-    width: 44px;
-    height: 44px;
+    width: min(118px, 92%);
+    height: 96px;
+  }
+
+  .iconWrap {
+    width: 64px;
+    height: 64px;
+    border-radius: 21px;
+  }
+
+  .iconWrap svg {
+    width: 32px;
+    height: 32px;
   }
 }
