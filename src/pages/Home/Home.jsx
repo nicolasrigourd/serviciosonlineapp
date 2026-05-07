@@ -228,9 +228,10 @@ export default function Home() {
     },
     {
       key: "bigbox",
-      title: "BigBox",
-      desc: "Hasta 20 kg",
+      title: "Box",
+      desc: "Hasta 10 kg",
       tone: "neutral",
+      image: "/imgs/services/box.webp",
       icon: bigBoxIcon,
       surcharge: 0.12,
     },
@@ -348,7 +349,7 @@ export default function Home() {
               <div className={styles.servicesHeader}>
                 <div>
                   <span className={styles.sectionKicker}>Servicios</span>
-                  <h1>¿Qué necesitás enviar?</h1>
+                  <h1>¿Qué necesitás hacer hoy?</h1>
                   <p>Elegí el tipo de pedido para continuar.</p>
                 </div>
               </div>
