@@ -240,6 +240,7 @@ export default function Home() {
       title: "Valores",
       desc: "Dinero o frágiles",
       tone: "neutral",
+       image: "/imgs/services/dinero.webp",
       icon: valoresIcon,
       surcharge: 0.2,
       badge: "Seguro",
@@ -249,9 +250,11 @@ export default function Home() {
       title: "Delivery",
       desc: "Comidas",
       tone: "neutral",
+       image: "/imgs/services/delivery.webp",
+
       icon: foodIcon,
       surcharge: 0.07,
-      badge: "Promo",
+      badge: "",
     },
   ];
 
