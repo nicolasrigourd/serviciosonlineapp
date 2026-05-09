@@ -4,7 +4,7 @@ import { useFlow } from "../../state/FlowContext";
 import { loadGoogleMaps } from "../../lib/googleMapsLoader";
 import AdressMapPicker from "../../components/AdressMapPicker/AdressMapPicker";
 import { useNavigate } from "react-router-dom";
-import styles from "./Enviar.module.css";
+import styles from "./Retirar.module.css";
 
 const DEFAULT_CENTER = {
   lat: -27.7834,
@@ -126,7 +126,7 @@ function calcQuote({ km, serviceSurcharge = 0 }) {
   };
 }
 
-export default function Enviar() {
+export default function Retirar() {
   const {
     state,
     setOrigin,
@@ -184,35 +184,35 @@ export default function Enviar() {
       delivery: "Delivery",
     };
 
-    return map[String(state.serviceType || "").toLowerCase()] || "Envío";
+    return map[String(state.serviceType || "").toLowerCase()] || "Retiro";
   }, [state.serviceType]);
 
   useEffect(() => {
     try {
-      setOperationType?.("envio");
-      sessionStorage.setItem("FLOW_OPERATION_TYPE", "envio");
+      setOperationType?.("retiro");
+      sessionStorage.setItem("FLOW_OPERATION_TYPE", "retiro");
     } catch {}
 
-    if (!state.origin) {
+    if (!state.destination) {
       const defaultAddress = getDefaultUserAddress();
 
       if (defaultAddress?.address) {
         try {
-          setOrigin(defaultAddress.address, defaultAddress.coords || null);
+          setDestination(defaultAddress.address, defaultAddress.coords || null);
         } catch {
-          setOrigin(defaultAddress.address);
+          setDestination(defaultAddress.address);
         }
 
         if (defaultAddress.coords) {
           try {
-            setOriginCoords?.(defaultAddress.coords);
+            setDestinationCoords?.(defaultAddress.coords);
           } catch {}
         }
       }
     }
 
     // IMPORTANTE:
-    // No limpiar destination, destinationCoords, km, price ni quote acá.
+    // No limpiar origin, originCoords, km, price ni quote acá.
     // El borrado del draft nuevo se hace desde Home con resetDraft().
     // Así al volver desde /flow/datos no se pierde lo cargado.
 
@@ -298,7 +298,7 @@ export default function Enviar() {
     }
 
     init().catch((error) => {
-      console.error("[ENVIAR] Error inicializando mapa:", error);
+      console.error("[RETIRAR] Error inicializando mapa:", error);
       setLocalError("No pudimos cargar el mapa. Revisá tu conexión.");
     });
 
@@ -706,14 +706,14 @@ export default function Enviar() {
   function handleNext() {
     if (!originConfirmed) {
       setLocalError(
-        "Confirmá el origen seleccionando una dirección o ajustando en el mapa."
+        "Confirmá el punto de retiro seleccionando una dirección o ajustando en el mapa."
       );
       return;
     }
 
     if (!destinationConfirmed) {
       setLocalError(
-        "Confirmá el destino seleccionando una dirección o ajustando en el mapa."
+        "Confirmá el punto de entrega seleccionando una dirección o ajustando en el mapa."
       );
       return;
     }
@@ -740,15 +740,15 @@ export default function Enviar() {
     }
 
     try {
-      setOperationType?.("envio");
-      sessionStorage.setItem("FLOW_OPERATION_TYPE", "envio");
+      setOperationType?.("retiro");
+      sessionStorage.setItem("FLOW_OPERATION_TYPE", "retiro");
     } catch {}
 
     const draft =
       typeof buildOrder === "function"
         ? buildOrder()
         : {
-            operationType: "envio",
+            operationType: "retiro",
             origin: state.origin,
             originCoords: state.originCoords,
             destination: state.destination,
@@ -760,9 +760,9 @@ export default function Enviar() {
             breakdown: autoQuote,
           };
 
-    console.log("[ENVIAR] Draft order →", {
+    console.log("[RETIRAR] Draft order →", {
       ...draft,
-      operationType: "envio",
+      operationType: "retiro",
     });
 
     navigate("/flow/datos");
@@ -784,9 +784,9 @@ export default function Enviar() {
 
   return (
     <div className={styles.screen}>
-      <FlowHeader title="Envíos" />
+      <FlowHeader title="Retiros" />
 
-      <section className={styles.mapOuter} aria-label="Mapa del envío">
+      <section className={styles.mapOuter} aria-label="Mapa del retiro">
         <div className={styles.mapWrap}>
           <div ref={mapRef} className={styles.map} />
 
@@ -799,7 +799,7 @@ export default function Enviar() {
                   }`
                 : hasBothLocations
                   ? "Calculando ruta..."
-                  : "Confirmá origen y destino"}
+                  : "Indicá dónde retiramos"}
             </strong>
           </div>
         </div>
@@ -809,20 +809,20 @@ export default function Enviar() {
         className={`${styles.sheet} ${
           showQuoteSummary ? styles.sheetWithQuote : ""
         }`}
-        aria-label="Datos del envío"
+        aria-label="Datos del retiro"
       >
         <div className={styles.grabber} aria-hidden="true" />
 
         <div className={styles.sheetHeader}>
-          <span>Nuevo envío</span>
-          <h1>Indicá origen y destino</h1>
+          <span>Nuevo retiro</span>
+          <h1>Indicá dónde retiramos</h1>
         </div>
 
         <div className={styles.fields}>
           <div className={styles.field}>
             <div className={styles.labelRow}>
               <label className={styles.label} htmlFor="from">
-                Origen
+                Retirar en
               </label>
 
               <span
@@ -840,7 +840,7 @@ export default function Enviar() {
                 ref={fromInputRef}
                 type="text"
                 className={styles.input}
-                placeholder="Dirección de retiro"
+                placeholder="Dirección donde debemos retirar"
                 value={state.origin || ""}
                 onChange={(event) =>
                   handleTextChange("from", event.target.value)
@@ -855,12 +855,18 @@ export default function Enviar() {
                 Ajustar
               </button>
             </div>
+
+            {!showQuoteSummary && (
+              <p className={styles.helperText}>
+                Podés pegar coordenadas o una ubicación copiada de Maps.
+              </p>
+            )}
           </div>
 
           <div className={styles.field}>
             <div className={styles.labelRow}>
               <label className={styles.label} htmlFor="to">
-                Destino
+                Entregar en
               </label>
 
               <span
@@ -878,7 +884,7 @@ export default function Enviar() {
                 ref={toInputRef}
                 type="text"
                 className={styles.input}
-                placeholder="Dirección, link o coordenadas"
+                placeholder="Tu dirección de entrega"
                 value={state.destination || ""}
                 onChange={(event) =>
                   handleTextChange("to", event.target.value)
@@ -893,12 +899,6 @@ export default function Enviar() {
                 Ajustar
               </button>
             </div>
-
-            {!showQuoteSummary && (
-              <p className={styles.helperText}>
-                Podés pegar coordenadas o una ubicación copiada de Maps.
-              </p>
-            )}
           </div>
 
           {(routeStatus || localError) && (

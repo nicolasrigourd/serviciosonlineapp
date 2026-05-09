@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "../pages/Login/Login";
 import Home from "../pages/Home/Home";
 import Enviar from "../pages/Enviar/Enviar";
+import Retirar from "../pages/Retirar/Retirar";
 import Register from "../pages/Register/Register";
 import DatosAdicionales from "../pages/DatosAdicionales/DatosAdicionales";
 import Checkout from "../pages/Checkout/Checkout";
@@ -12,7 +13,7 @@ import Profile from "../pages/Profile/Profile";
 
 import ProtectedRoute from "./ProtectedRoute";
 import GuestOnlyRoute from "./GuestOnlyRoute";
-import LoadingScreen from "../components/LoadingScreen"; // 👈
+import LoadingScreen from "../components/LoadingScreen";
 
 export default function AppRouter() {
   const loader = <LoadingScreen label="Preparando tu sesión…" />;
@@ -29,6 +30,7 @@ export default function AppRouter() {
             </GuestOnlyRoute>
           }
         />
+
         <Route
           path="/register"
           element={
@@ -47,6 +49,7 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/flow/enviar"
           element={
@@ -55,6 +58,16 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/flow/retirar"
+          element={
+            <ProtectedRoute loadingFallback={loader}>
+              <Retirar />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/flow/datos"
           element={
@@ -63,6 +76,7 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/flow/checkout"
           element={
@@ -71,6 +85,7 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/orders"
           element={
@@ -79,6 +94,7 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/direcciones"
           element={
@@ -87,6 +103,7 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/profile"
           element={

@@ -40,7 +40,13 @@ export default function Home() {
   const navigate = useNavigate();
   const auth = useAuth();
   const { user: ctxUser } = auth || {};
-  const { setService, setOrigin } = useFlow();
+
+  const {
+    setService,
+    setOrigin,
+    resetDraft,
+    setOperationType,
+  } = useFlow();
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [hasActiveOrder, setHasActiveOrder] = useState(() =>
@@ -149,25 +155,36 @@ export default function Home() {
   };
 
   const goNotifications = () => {
-    // Por ahora queda preparado para futuras notificaciones.
-    // Si después creamos la ruta, cambiamos esto por navigate("/notificaciones").
     console.log("[HOME] Notificaciones pendiente de implementar");
   };
 
-  const pickService = (type, surcharge) => {
+  const validateAddressBeforeService = () => {
     if (!addrLabel) {
-      alert("Primero agregá una dirección principal para poder pedir un envío.");
+      alert("Primero agregá una dirección principal para poder pedir un servicio.");
       navigate("/direcciones");
-      return;
+      return false;
     }
 
     if (!hasUsableAddress) {
       alert(
-        "Tu dirección no tiene ubicación GPS confirmada. Actualizala para poder calcular el envío correctamente."
+        "Tu dirección no tiene ubicación GPS confirmada. Actualizala para poder calcular el pedido correctamente."
       );
       navigate("/direcciones");
-      return;
+      return false;
     }
+
+    return true;
+  };
+
+  const pickService = (type, surcharge) => {
+    if (!validateAddressBeforeService()) return;
+
+    resetDraft?.();
+    setOperationType?.("envio");
+
+    try {
+      sessionStorage.setItem("FLOW_OPERATION_TYPE", "envio");
+    } catch {}
 
     setService(type, surcharge);
 
@@ -177,6 +194,30 @@ export default function Home() {
     });
 
     navigate("/flow/enviar");
+  };
+
+  const pickRetiro = (type, surcharge) => {
+    if (!validateAddressBeforeService()) return;
+
+    resetDraft?.();
+    setOperationType?.("retiro");
+
+    try {
+      sessionStorage.setItem("FLOW_OPERATION_TYPE", "retiro");
+    } catch {}
+
+    setService(type, surcharge);
+
+    navigate("/flow/retirar");
+  };
+
+  const handleServiceClick = (action) => {
+    if (action.flow === "retiro") {
+      pickRetiro(action.serviceKey || action.key, action.surcharge);
+      return;
+    }
+
+    pickService(action.serviceKey || action.key, action.surcharge);
   };
 
   const handleLogout = async () => {
@@ -208,19 +249,22 @@ export default function Home() {
 
   const actions = [
     {
-      key: "simple",
+      key: "simple-envio",
+      serviceKey: "simple",
+      flow: "envio",
       title: "Enviar",
-      desc:"Articulos Pequeños",
+      desc: "Artículos pequeños",
       tone: "neutral",
       image: "/imgs/services/envios.webp",
       icon: simpleIcon,
       surcharge: 0,
-     
     },
     {
-      key: "box",
+      key: "simple-retiro",
+      serviceKey: "simple",
+      flow: "retiro",
       title: "Retirar",
-      desc: "Hasta 10 kg",
+      desc: "Buscamos y te llevamos",
       tone: "neutral",
       image: "/imgs/services/retiros.webp",
       icon: boxIcon,
@@ -228,6 +272,8 @@ export default function Home() {
     },
     {
       key: "bigbox",
+      serviceKey: "bigbox",
+      flow: "envio",
       title: "Box",
       desc: "Hasta 10 kg",
       tone: "neutral",
@@ -237,21 +283,24 @@ export default function Home() {
     },
     {
       key: "valores",
+      serviceKey: "valores",
+      flow: "envio",
       title: "Valores",
       desc: "Dinero o frágiles",
       tone: "neutral",
-       image: "/imgs/services/dinero.webp",
+      image: "/imgs/services/dinero.webp",
       icon: valoresIcon,
       surcharge: 0.2,
       badge: "Seguro",
     },
     {
       key: "delivery",
+      serviceKey: "delivery",
+      flow: "envio",
       title: "Delivery",
       desc: "Comidas",
       tone: "neutral",
-       image: "/imgs/services/delivery.webp",
-
+      image: "/imgs/services/delivery.webp",
       icon: foodIcon,
       surcharge: 0.07,
       badge: "",
@@ -347,7 +396,7 @@ export default function Home() {
           <div className={styles.homeLayout}>
             <section
               className={styles.servicesPanel}
-              aria-label="Tipos de envío"
+              aria-label="Tipos de servicio"
             >
               <div className={styles.servicesHeader}>
                 <div>
@@ -367,7 +416,7 @@ export default function Home() {
                     desc={a.desc}
                     tone={a.tone}
                     badge={a.badge}
-                    onClick={() => pickService(a.key, a.surcharge)}
+                    onClick={() => handleServiceClick(a)}
                   />
                 ))}
               </div>
@@ -397,16 +446,16 @@ export default function Home() {
 
                 <article className={styles.carouselCard}>
                   <div>
-                    <span>Delivery</span>
-                    <h2>Retiro de comidas</h2>
-                    <p>Coordinamos con cadetes disponibles.</p>
+                    <span>Retiro</span>
+                    <h2>Buscamos por vos</h2>
+                    <p>Indicá dónde retirar y te lo llevamos a tu dirección.</p>
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => pickService("delivery", 0.07)}
+                    onClick={() => pickRetiro("simple", 0.07)}
                   >
-                    Pedir
+                    Retirar
                   </button>
                 </article>
 

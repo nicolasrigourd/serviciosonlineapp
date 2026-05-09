@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+// src/state/FlowContext.jsx
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 const FlowContext = createContext(null);
 
@@ -7,47 +14,57 @@ const PEDIDOS_KEY = "PedidosApp";
 const PEDIDO_ACTUAL_KEY = "NuevoPedido";
 
 const initialState = {
-  // Dirección y destino
+  // ========= Geografía =========
   origin: "",
-  originCoords: null,       // { lat, lng, placeId } | null
+  originCoords: null,
   destination: "",
-  destinationCoords: null,  // { lat, lng, placeId } | null
+  destinationCoords: null,
 
-  // Servicio
+  // ========= Tipo operativo =========
+  operationType: "", // "envio" | "retiro"
+
+  // ========= Servicio =========
   size: "chico",
-  serviceType: "simple",    // "simple" | "box" | "bigbox" | ...
+  serviceType: "simple",
   surcharge: 0,
 
-  // Distancia y cotización
+  // ========= Distancia y cotización =========
   km: 0,
   price: 0,
   breakdown: null,
   quotedAt: null,
 
-  // Contactos y notas
-  notesFrom: "",
-  notesTo: "",
+  // ========= Punto de retiro / pickup =========
+  contactFromName: "",
   contactFrom: "",
-  contactTo: "",
-  dropoffApt: "",
+  pickupApt: "",
+  pickupReference: "",
+  notesFrom: "",
 
-  // Destinatario
+  // ========= Punto de entrega / dropoff =========
   recipientName: "",
   recipientPhone: "",
+  contactTo: "",
+  dropoffApt: "",
+  dropoffReference: "",
+  notesTo: "",
 
-  // Contrato operativo básico
-  paymentMethod: "cash",           // "cash" | "digital"
+  // ========= Compatibilidad vieja =========
+  legacyNotes: "",
+
+  // ========= Pago y contrato operativo =========
+  paymentMethod: "", // "" | "cash" | "mercadopago"
   allowsFallbackToLocal: true,
-  priority: "normal",              // "normal" | "high"
+  priority: "normal",
 };
 
 export function FlowProvider({ children }) {
   const [state, setState] = useState(() => {
     try {
       const raw = sessionStorage.getItem(STORAGE_KEY);
-      return raw ? { ...initialState, ...JSON.parse(raw) } : initialState;
+      return raw ? { ...initialState, ...JSON.parse(raw) } : { ...initialState };
     } catch {
-      return initialState;
+      return { ...initialState };
     }
   });
 
@@ -72,235 +89,469 @@ export function FlowProvider({ children }) {
     } catch {}
   }
 
-  const api = useMemo(() => ({
-    state,
+  const api = useMemo(
+    () => ({
+      state,
 
-    // ========= Setters base =========
-    setOrigin: (text, coords = null) =>
-      setState((s) => ({
-        ...s,
-        origin: text,
-        originCoords: coords ? normCoords(coords) : s.originCoords,
-      })),
+      // ========= Setters de geografía =========
+      setOrigin: (text, coords = undefined) =>
+        setState((s) => ({
+          ...s,
+          origin: text,
+          originCoords:
+            coords === undefined
+              ? s.originCoords
+              : coords
+                ? normCoords(coords)
+                : null,
+        })),
 
-    setDestination: (text, coords = null) =>
-      setState((s) => ({
-        ...s,
-        destination: text,
-        destinationCoords: coords ? normCoords(coords) : s.destinationCoords,
-      })),
+      setDestination: (text, coords = undefined) =>
+        setState((s) => ({
+          ...s,
+          destination: text,
+          destinationCoords:
+            coords === undefined
+              ? s.destinationCoords
+              : coords
+                ? normCoords(coords)
+                : null,
+        })),
 
-    setOriginCoords: (coords) =>
-      setState((s) => ({ ...s, originCoords: normCoords(coords) })),
+      setOriginCoords: (coords) =>
+        setState((s) => ({
+          ...s,
+          originCoords: normCoords(coords),
+        })),
 
-    setDestinationCoords: (coords) =>
-      setState((s) => ({ ...s, destinationCoords: normCoords(coords) })),
+      setDestinationCoords: (coords) =>
+        setState((s) => ({
+          ...s,
+          destinationCoords: normCoords(coords),
+        })),
 
-    setSize: (value) =>
-      setState((s) => ({ ...s, size: value })),
+      // ========= Operación / servicio =========
+      setOperationType: (value) =>
+        setState((s) => ({
+          ...s,
+          operationType:
+            value === "retiro" ? "retiro" : value === "envio" ? "envio" : "",
+        })),
 
-    setService: (type, surcharge = 0) =>
-      setState((s) => ({
-        ...s,
-        serviceType: type || "simple",
-        surcharge: Number(surcharge) || 0,
-      })),
+      setSize: (value) =>
+        setState((s) => ({
+          ...s,
+          size: value || "chico",
+        })),
 
-    setKm: (value) =>
-      setState((s) => ({ ...s, km: Number(value) || 0 })),
+      setService: (type, surcharge = 0) =>
+        setState((s) => ({
+          ...s,
+          serviceType: type || "simple",
+          surcharge: Number(surcharge) || 0,
+        })),
 
-    setPrice: (amount) =>
-      setState((s) => ({ ...s, price: Number(amount) || 0 })),
+      // ========= Cotización =========
+      setKm: (value) =>
+        setState((s) => ({
+          ...s,
+          km: Number(value) || 0,
+        })),
 
-    setQuote: ({ km, total, breakdown }) =>
-      setState((s) => ({
-        ...s,
-        km: Number(km) || 0,
-        price: Number(total) || 0,
-        breakdown: breakdown || null,
-        quotedAt: Date.now(),
-      })),
+      setPrice: (amount) =>
+        setState((s) => ({
+          ...s,
+          price: Number(amount) || 0,
+        })),
 
-    // ========= Notas / contactos =========
-    setNotesFrom: (value) =>
-      setState((s) => ({ ...s, notesFrom: value })),
+      setQuote: (quote) =>
+        setState((s) => {
+          if (!quote) {
+            return {
+              ...s,
+              km: 0,
+              price: 0,
+              breakdown: null,
+              quotedAt: null,
+            };
+          }
 
-    setNotesTo: (value) =>
-      setState((s) => ({ ...s, notesTo: value })),
+          return {
+            ...s,
+            km: Number(quote.km) || 0,
+            price: Number(quote.total) || 0,
+            breakdown: quote.breakdown || null,
+            quotedAt: Date.now(),
+          };
+        }),
 
-    setContactFrom: (value) =>
-      setState((s) => ({ ...s, contactFrom: value })),
+      // ========= Punto de retiro / pickup =========
+      setContactFromName: (value) =>
+        setState((s) => ({
+          ...s,
+          contactFromName: value || "",
+        })),
 
-    setContactTo: (value) =>
-      setState((s) => ({ ...s, contactTo: value })),
+      setContactFrom: (value) =>
+        setState((s) => ({
+          ...s,
+          contactFrom: value || "",
+        })),
 
-    setDropoffApt: (value) =>
-      setState((s) => ({ ...s, dropoffApt: value })),
+      setPickupApt: (value) =>
+        setState((s) => ({
+          ...s,
+          pickupApt: value || "",
+          pickupReference: value || "",
+        })),
 
-    // ========= Destinatario =========
-    setRecipientName: (value) =>
-      setState((s) => ({ ...s, recipientName: value })),
+      setPickupReference: (value) =>
+        setState((s) => ({
+          ...s,
+          pickupReference: value || "",
+          pickupApt: value || "",
+        })),
 
-    setRecipientPhone: (value) =>
-      setState((s) => ({ ...s, recipientPhone: value })),
+      setNotesFrom: (value) =>
+        setState((s) => ({
+          ...s,
+          notesFrom: value || "",
+        })),
 
-    // ========= Contrato operativo =========
-    setPaymentMethod: (value) =>
-      setState((s) => ({
-        ...s,
-        paymentMethod: value === "digital" ? "digital" : "cash",
-      })),
+      // ========= Punto de entrega / dropoff =========
+      setRecipientName: (value) =>
+        setState((s) => ({
+          ...s,
+          recipientName: value || "",
+        })),
 
-    setAllowsFallbackToLocal: (value) =>
-      setState((s) => ({ ...s, allowsFallbackToLocal: Boolean(value) })),
+      setRecipientPhone: (value) =>
+        setState((s) => ({
+          ...s,
+          recipientPhone: value || "",
+        })),
 
-    setPriority: (value) =>
-      setState((s) => ({
-        ...s,
-        priority: value === "high" ? "high" : "normal",
-      })),
+      setContactTo: (value) =>
+        setState((s) => ({
+          ...s,
+          contactTo: value || "",
+        })),
 
-    // ========= Compatibilidad con código viejo =========
-    setNotes: (value) =>
-      setState((s) => ({ ...s, notesTo: value })),
+      setDropoffApt: (value) =>
+        setState((s) => ({
+          ...s,
+          dropoffApt: value || "",
+          dropoffReference: value || "",
+        })),
 
-    setContact: (value) =>
-      setState((s) => ({ ...s, contactTo: value })),
+      setDropoffReference: (value) =>
+        setState((s) => ({
+          ...s,
+          dropoffReference: value || "",
+          dropoffApt: value || "",
+        })),
 
-    // ========= Builder profesional =========
-    buildOrder: (sessionUser) => {
-      const su = sessionUser || safeReadSessionUser();
-      const addresses = Array.isArray(su?.addresses) ? su.addresses : [];
-      const def = addresses.find((a) => a?.isDefault) || addresses[0] || null;
+      setNotesTo: (value) =>
+        setState((s) => ({
+          ...s,
+          notesTo: value || "",
+        })),
 
-      const paymentMethod = state.paymentMethod === "digital" ? "digital" : "cash";
-      const requiresCashHandling = paymentMethod === "cash";
+      // ========= Pago =========
+      setPaymentMethod: (value) =>
+        setState((s) => ({
+          ...s,
+          paymentMethod:
+            value === "cash" || value === "mercadopago" ? value : "",
+        })),
 
-      const recipientName = String(state.recipientName || "").trim();
-      const recipientPhone = String(state.recipientPhone || "").trim();
-      const dropoffApt = String(state.dropoffApt || "").trim();
+      setAllowsFallbackToLocal: (value) =>
+        setState((s) => ({
+          ...s,
+          allowsFallbackToLocal: Boolean(value),
+        })),
 
-      const notesFrom = String(state.notesFrom || "").trim();
-      const notesTo = String(state.notesTo || "").trim();
+      setPriority: (value) =>
+        setState((s) => ({
+          ...s,
+          priority: value === "high" ? "high" : "normal",
+        })),
 
-      const originCoords = normCoords(state.originCoords);
-      const destinationCoords = normCoords(state.destinationCoords);
+      // ========= Compatibilidad con código viejo =========
+      // Importante: setNotes ya NO pisa notesTo.
+      // Antes mezclaba ORIGEN/DESTINO dentro de notesTo y generaba bugs.
+      setNotes: (value) =>
+        setState((s) => ({
+          ...s,
+          legacyNotes: value || "",
+        })),
 
-      const orderId = `ORD-${Date.now()}`;
+      setContact: (value) =>
+        setState((s) => ({
+          ...s,
+          contactTo: value || "",
+        })),
 
-      return {
-        // ========= Identidad / metadata =========
-        id: orderId,
-        version: 1,
-        appSource: "customer_app",
-        createdBy: "customer_app",
+      // ========= Builder profesional =========
+      buildOrder: (sessionUser) => {
+        const su = sessionUser || safeReadSessionUser();
 
-        createdAt: null, // lo completa server/firestore
-        createdAtLocal: new Date().toISOString(),
-        lastUpdate: null, // lo completa server/firestore
+        const addresses = Array.isArray(su?.addresses) ? su.addresses : [];
+        const def = addresses.find((a) => a?.isDefault) || addresses[0] || null;
 
-        // ========= Estados =========
-        status: "pendiente",
-        serverStatus: "pending_validation",
-        assignmentStatus: "unassigned",
+        const operationType =
+          state.operationType || safeReadOperationType() || "";
 
-        // ========= Naturaleza del pedido =========
-        tipoPedido: "online",
-        assignmentScope: "online",
-        allowsFallbackToLocal: Boolean(state.allowsFallbackToLocal),
-        priority: state.priority === "high" ? "high" : "normal",
+        const paymentMethod =
+          state.paymentMethod === "mercadopago"
+            ? "mercadopago"
+            : state.paymentMethod === "cash"
+              ? "cash"
+              : "";
 
-        // ========= Cliente =========
-        customerUid: su?.uid || null,
-        userId: su?.uid || null,
-        userEmail: su?.email || "",
-        userName: su ? `${su.nombre || ""} ${su.apellido || ""}`.trim() : "",
-        customerPhone: su?.telefono || "",
+        const paymentLabel =
+          paymentMethod === "cash"
+            ? "Efectivo"
+            : paymentMethod === "mercadopago"
+              ? "MercadoPago"
+              : "";
 
-        customerDefaultAddress: {
-          address: su?.direccion || def?.address || "",
-          lat: def?.lat ?? null,
-          lng: def?.lng ?? null,
-          piso: def?.piso ?? su?.dpto ?? "",
-          placeId: def?.placeId || "",
-        },
+        const paymentStatus =
+          paymentMethod === "cash"
+            ? "pending_cash"
+            : paymentMethod === "mercadopago"
+              ? "pending_digital"
+              : "";
 
-        // ========= Servicio =========
-        serviceType: state.serviceType || "simple",
-        size: state.size || "chico",
-        surcharge: Number(state.surcharge) || 0,
+        const requiresCashHandling = paymentMethod === "cash";
+        const requiresMercadoPago = paymentMethod === "mercadopago";
 
-        // ========= Geografía =========
-        origin: state.origin || "",
-        originCoords: originCoords
-          ? { ...originCoords }
-          : { lat: null, lng: null, placeId: "" },
+        const originCoords = normCoords(state.originCoords);
+        const destinationCoords = normCoords(state.destinationCoords);
 
-        destination: state.destination || "",
-        destinationCoords: destinationCoords
-          ? { ...destinationCoords }
-          : { lat: null, lng: null, placeId: "" },
+        const contactFromName = String(state.contactFromName || "").trim();
+        const contactFrom = String(state.contactFrom || "").trim();
 
-        dropoffApt,
+        const recipientName = String(state.recipientName || "").trim();
+        const recipientPhone = String(
+          state.recipientPhone || state.contactTo || ""
+        ).trim();
 
-        km: Number(state.km) || 0,
+        const pickupApt = String(
+          state.pickupApt || state.pickupReference || ""
+        ).trim();
 
-        // ========= Económico =========
-        price: Number(state.price) || 0,
-        breakdown: state.breakdown || null,
-        quotedAt: state.quotedAt || null,
+        const dropoffApt = String(
+          state.dropoffApt || state.dropoffReference || ""
+        ).trim();
 
-        paymentMethod,
-        requiresCashHandling,
+        const notesFrom = String(state.notesFrom || "").trim();
+        const notesTo = String(state.notesTo || "").trim();
 
-        // ========= Contactos =========
-        contactFrom: state.contactFrom || su?.telefono || "",
-        contactTo: state.contactTo || recipientPhone || "",
+        const price = Number(state.price) || 0;
+        const orderId = `ORD-${Date.now()}`;
 
-        // ========= Destinatario =========
-        recipient: {
-          name: recipientName,
-          phone: recipientPhone,
-          floor: dropoffApt,
-        },
+        const pickup = {
+          address: state.origin || "",
+          coords: originCoords ? { ...originCoords } : null,
+          contactName: contactFromName,
+          contactPhone: contactFrom,
+          floorOrReference: pickupApt,
+          notes: notesFrom,
+        };
 
-        // ========= Notas =========
-        notesFrom,
-        notesTo,
-        notes: {
-          origen: notesFrom,
-          destino: notesTo,
-        },
+        const dropoff = {
+          address: state.destination || "",
+          coords: destinationCoords ? { ...destinationCoords } : null,
+          contactName: recipientName,
+          contactPhone: recipientPhone,
+          floorOrReference: dropoffApt,
+          notes: notesTo,
+        };
 
-        // ========= Asignación / tracking =========
-        assignedCadeteId: null,
-        assignedCadete: null,
-        assignedAt: null,
+        return {
+          // ========= Identidad / metadata =========
+          id: orderId,
+          version: 2,
+          appSource: "customer_app",
+          createdBy: "customer_app",
 
-        // ========= Server =========
-        serverReviewSummary: null,
-      };
-    },
+          createdAt: null,
+          createdAtLocal: new Date().toISOString(),
+          lastUpdate: null,
 
-    // ========= Guardado local =========
-    saveOrder: (order) => {
-      if (!order) return;
-      appendPedido(order);
-      savePedidoActual(order);
-    },
+          // ========= Estados =========
+          status: "pendiente",
+          serverStatus: "pending_validation",
+          assignmentStatus: "unassigned",
 
-    // ========= Reset =========
-    reset: () => setState(initialState),
-  }), [state]);
+          // ========= Naturaleza del pedido =========
+          tipoPedido: "online",
+          operationType,
+          assignmentScope: "online",
+          allowsFallbackToLocal: Boolean(state.allowsFallbackToLocal),
+          priority: state.priority === "high" ? "high" : "normal",
+
+          // ========= Cliente =========
+          customerUid: su?.uid || null,
+          userId: su?.uid || null,
+          userEmail: su?.email || "",
+          userName: su
+            ? `${su.nombre || ""} ${su.apellido || ""}`.trim()
+            : "",
+          customerPhone: su?.telefono || "",
+
+          customerDefaultAddress: {
+            address: su?.direccion || def?.address || "",
+            lat: def?.lat ?? null,
+            lng: def?.lng ?? null,
+            piso: def?.piso ?? su?.dpto ?? "",
+            referencia: def?.referencia || def?.descripcion || "",
+            placeId: def?.placeId || "",
+          },
+
+          // ========= Servicio =========
+          serviceType: state.serviceType || "simple",
+          size: state.size || "chico",
+          surcharge: Number(state.surcharge) || 0,
+
+          // ========= Geografía legacy =========
+          origin: state.origin || "",
+          originCoords: originCoords
+            ? { ...originCoords }
+            : { lat: null, lng: null, placeId: "" },
+
+          destination: state.destination || "",
+          destinationCoords: destinationCoords
+            ? { ...destinationCoords }
+            : { lat: null, lng: null, placeId: "" },
+
+          km: Number(state.km) || 0,
+
+          // ========= Estructura profesional =========
+          pickup,
+          dropoff,
+
+          // ========= Campos legacy / compatibilidad =========
+          pickupApt,
+          pickupReference: pickupApt,
+          dropoffApt,
+          dropoffReference: dropoffApt,
+
+          contactFrom,
+          contactTo: recipientPhone,
+
+          sender: {
+            name: contactFromName,
+            phone: contactFrom,
+            floor: pickupApt,
+            floorOrReference: pickupApt,
+          },
+
+          recipient: {
+            name: recipientName,
+            phone: recipientPhone,
+            floor: dropoffApt,
+            floorOrReference: dropoffApt,
+          },
+
+          notesFrom,
+          notesTo,
+          notes: {
+            origen: notesFrom,
+            destino: notesTo,
+          },
+
+          // ========= Económico =========
+          price,
+          breakdown: state.breakdown || null,
+          quotedAt: state.quotedAt || null,
+
+          // ========= Pago =========
+          paymentMethod,
+          paymentLabel,
+          paymentStatus,
+          paymentAmount: price,
+          paymentCurrency: "ARS",
+          paymentProvider:
+            paymentMethod === "mercadopago" ? "mercadopago" : null,
+
+          requiresCashHandling,
+          requiresMercadoPago,
+
+          matchRequirements: {
+            operationType,
+            serviceType: state.serviceType || "simple",
+            paymentMethod,
+            requiresCashHandling,
+            requiresMercadoPago,
+          },
+
+          payment: {
+            method: paymentMethod,
+            label: paymentLabel,
+            status: paymentStatus,
+            amount: price,
+            currency: "ARS",
+            provider:
+              paymentMethod === "mercadopago" ? "mercadopago" : null,
+            requiresCashHandling,
+            requiresMercadoPago,
+          },
+
+          // ========= Asignación / tracking =========
+          assignedCadeteId: null,
+          assignedCadete: null,
+          assignedAt: null,
+
+          // ========= Server =========
+          serverReviewSummary: null,
+        };
+      },
+
+      // ========= Guardado local =========
+      saveOrder: (order) => {
+        if (!order) return;
+        appendPedido(order);
+        savePedidoActual(order);
+      },
+
+      // ========= Reset para iniciar pedido nuevo =========
+      resetDraft: () => {
+        try {
+          sessionStorage.removeItem(STORAGE_KEY);
+        } catch {}
+
+        setState((s) => ({
+          ...initialState,
+          allowsFallbackToLocal: s.allowsFallbackToLocal ?? true,
+          priority: s.priority || "normal",
+        }));
+      },
+
+      // ========= Reset total =========
+      reset: () => {
+        try {
+          sessionStorage.removeItem(STORAGE_KEY);
+          sessionStorage.removeItem("FLOW_OPERATION_TYPE");
+        } catch {}
+
+        setState({ ...initialState });
+      },
+    }),
+    [state]
+  );
 
   return <FlowContext.Provider value={api}>{children}</FlowContext.Provider>;
 }
 
 export function useFlow() {
   const ctx = useContext(FlowContext);
+
   if (!ctx) {
     throw new Error("useFlow debe usarse dentro de <FlowProvider>");
   }
+
   return ctx;
 }
 
@@ -311,9 +562,7 @@ function normCoords(coords) {
   const lat = Number(coords.lat);
   const lng = Number(coords.lng);
   const placeId =
-    typeof coords.placeId === "string"
-      ? coords.placeId
-      : coords.place_id || "";
+    typeof coords.placeId === "string" ? coords.placeId : coords.place_id || "";
 
   if (!isFinite(lat) || !isFinite(lng)) return null;
 
@@ -329,5 +578,14 @@ function safeReadSessionUser() {
     return JSON.parse(localStorage.getItem("SessionUser") || "null");
   } catch {
     return null;
+  }
+}
+
+function safeReadOperationType() {
+  try {
+    const value = sessionStorage.getItem("FLOW_OPERATION_TYPE");
+    return value === "retiro" || value === "envio" ? value : "";
+  } catch {
+    return "";
   }
 }

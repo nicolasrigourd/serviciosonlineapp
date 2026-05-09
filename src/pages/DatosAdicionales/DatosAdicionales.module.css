@@ -4,7 +4,7 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   background:
-    radial-gradient(circle at top left, rgba(34, 197, 94, 0.12), transparent 32%),
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.11), transparent 34%),
     linear-gradient(180deg, #fbfff8 0%, #f8fafc 48%, #ffffff 100%);
   color: #0f172a;
   overflow: hidden;
@@ -56,7 +56,7 @@
 .title {
   margin: 0;
   color: #0f172a;
-  font-size: clamp(1.26rem, 6vw, 1.72rem);
+  font-size: clamp(1.26rem, 6vw, 1.68rem);
   line-height: 1;
   font-weight: 950;
   letter-spacing: -0.045em;
@@ -93,7 +93,7 @@
   -webkit-overflow-scrolling: touch;
   display: grid;
   align-content: start;
-  gap: 14px;
+  gap: 13px;
   padding:
     12px
     14px
@@ -101,8 +101,9 @@
   box-sizing: border-box;
 }
 
-.card,
-.error {
+.flowCard,
+.error,
+.paymentCard {
   width: 100%;
   max-width: 720px;
   justify-self: center;
@@ -125,104 +126,93 @@
 }
 
 /* ===============================
-   CARD
+   FLOW CARD
    =============================== */
 
-.card {
+.flowCard {
   display: grid;
-  gap: 13px;
-  padding: 15px;
+  gap: 12px;
+  padding: 16px;
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.97);
   border: 1px solid rgba(226, 232, 240, 0.95);
   box-shadow:
-    0 14px 34px rgba(15, 23, 42, 0.07),
+    0 14px 34px rgba(15, 23, 42, 0.065),
     inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
-.cardHeader {
+.sectionTop {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
   gap: 12px;
 }
 
-.cardIcon {
-  width: 44px;
-  height: 44px;
-  border-radius: 18px;
-  display: grid;
-  place-items: center;
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.cardTitleBlock {
-  min-width: 0;
-}
-
-.cardTitle {
+.stepLabel {
   margin: 0;
-  color: #0f172a;
-  font-size: 1.08rem;
-  line-height: 1.06;
-  font-weight: 950;
-  letter-spacing: -0.03em;
-}
-
-.cardText {
-  margin: 4px 0 0;
-  color: #64748b;
-  font-size: 0.82rem;
-  line-height: 1.25;
-  font-weight: 650;
-}
-
-/* ===============================
-   DIRECCIÓN
-   =============================== */
-
-.addressBox {
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-  padding: 11px;
-  border-radius: 20px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-}
-
-.addressIcon {
-  width: 40px;
-  height: 40px;
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.addressText {
-  min-width: 0;
-  display: grid;
-  gap: 3px;
-}
-
-.addressText span {
-  color: #94a3b8;
-  font-size: 0.68rem;
+  color: #16a34a;
+  font-size: 0.7rem;
+  line-height: 1;
   font-weight: 950;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.07em;
 }
 
-.addressText strong {
+.sectionTitle {
+  margin: 5px 0 0;
+  color: #0f172a;
+  font-size: 1.08rem;
+  line-height: 1.08;
+  font-weight: 950;
+  letter-spacing: -0.035em;
+}
+
+.sectionMark {
+  width: 34px;
+  height: 34px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.addressLine {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+}
+
+.addressDot {
+  width: 34px;
+  height: 34px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.addressLine strong {
   color: #334155;
-  font-size: 0.88rem;
-  line-height: 1.24;
-  font-weight: 800;
+  font-size: 0.92rem;
+  line-height: 1.25;
+  font-weight: 850;
   word-break: break-word;
+}
+
+.softDivider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(226, 232, 240, 0.95),
+    transparent
+  );
 }
 
 /* ===============================
@@ -232,7 +222,7 @@
 .row2 {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: 11px;
 }
 
 .field {
@@ -241,8 +231,8 @@
 }
 
 .label {
-  color: #334155;
-  font-size: 0.84rem;
+  color: #475569;
+  font-size: 0.8rem;
   font-weight: 850;
 }
 
@@ -250,10 +240,10 @@
 .textarea {
   width: 100%;
   border: 1.5px solid #e2e8f0;
-  border-radius: 16px;
+  border-radius: 17px;
   background: #f8fafc;
   color: #0f172a;
-  font-size: 0.95rem;
+  font-size: 0.94rem;
   font-weight: 650;
   outline: none;
   box-sizing: border-box;
@@ -264,12 +254,12 @@
 }
 
 .input {
-  height: 48px;
+  height: 47px;
   padding: 0 14px;
 }
 
 .textarea {
-  min-height: 74px;
+  min-height: 70px;
   padding: 12px 14px;
   resize: vertical;
   line-height: 1.35;
@@ -292,6 +282,161 @@
   justify-self: end;
   color: #94a3b8;
   font-size: 0.72rem;
+  font-weight: 800;
+}
+
+/* ===============================
+   PAYMENT CARD
+   =============================== */
+
+.paymentCard {
+  display: grid;
+  gap: 13px;
+  padding: 16px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.12), transparent 37%),
+    rgba(255, 255, 255, 0.985);
+  border: 1.5px solid rgba(187, 247, 208, 0.95);
+  box-shadow:
+    0 16px 38px rgba(15, 23, 42, 0.08),
+    0 8px 24px rgba(22, 163, 74, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.paymentState {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.paymentStateReady {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.paymentIntro {
+  margin: -2px 0 0;
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  font-weight: 650;
+}
+
+.paymentOptions {
+  display: grid;
+  gap: 2px;
+  border-radius: 24px;
+  background: rgba(248, 250, 252, 0.92);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  overflow: hidden;
+}
+
+.paymentOption {
+  width: 100%;
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 13px;
+  border: none;
+  background: transparent;
+  color: #0f172a;
+  cursor: pointer;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.paymentOption + .paymentOption {
+  border-top: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.paymentOptionActive {
+  background: rgba(240, 253, 244, 0.92);
+}
+
+.cashIconWrap {
+  width: 54px;
+  height: 54px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid rgba(187, 247, 208, 0.95);
+  box-sizing: border-box;
+}
+
+.mpLogoWrap {
+  width: 54px;
+  height: 54px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.mpLogo {
+  width: 46px;
+  max-height: 30px;
+  object-fit: contain;
+  display: block;
+}
+
+.paymentOptionInfo {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.paymentOptionInfo strong {
+  color: #0f172a;
+  font-size: 0.96rem;
+  line-height: 1.1;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+}
+
+.paymentOptionInfo span {
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.22;
+  font-weight: 650;
+}
+
+.paymentCheck {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  justify-self: end;
+  background: #22c55e;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 950;
+}
+
+.paymentOption:not(.paymentOptionActive) .paymentCheck {
+  background: transparent;
+}
+
+.paymentWarning {
+  margin: -2px 2px 0;
+  color: #15803d;
+  font-size: 0.76rem;
+  line-height: 1.25;
   font-weight: 800;
 }
 
@@ -417,34 +562,40 @@
     gap: 12px;
   }
 
-  .card {
+  .flowCard,
+  .paymentCard {
     border-radius: 25px;
     padding: 14px;
   }
 
-  .cardHeader {
-    grid-template-columns: 40px minmax(0, 1fr);
+  .sectionTop {
+    grid-template-columns: 1fr auto;
   }
 
-  .cardIcon {
-    width: 40px;
-    height: 40px;
-    border-radius: 16px;
-  }
-
-  .addressBox {
-    border-radius: 18px;
-    padding: 10px;
-  }
-
-  .addressIcon {
-    width: 38px;
-    height: 38px;
-    border-radius: 15px;
+  .sectionTitle {
+    font-size: 1rem;
   }
 
   .input {
     height: 46px;
+  }
+
+  .paymentOption {
+    grid-template-columns: 50px minmax(0, 1fr) 28px;
+    min-height: 72px;
+    gap: 10px;
+  }
+
+  .cashIconWrap,
+  .mpLogoWrap {
+    width: 50px;
+    height: 50px;
+    border-radius: 18px;
+  }
+
+  .mpLogo {
+    width: 42px;
+    max-height: 28px;
   }
 
   .footer {
@@ -479,7 +630,8 @@
     gap: 11px;
   }
 
-  .card {
+  .flowCard,
+  .paymentCard {
     padding: 13px;
   }
 
@@ -489,6 +641,10 @@
 
   .input {
     height: 45px;
+  }
+
+  .paymentOption {
+    min-height: 68px;
   }
 
   .footer {
@@ -503,7 +659,8 @@
 @media (prefers-reduced-motion: reduce) {
   .input,
   .textarea,
-  .primaryBtn {
+  .primaryBtn,
+  .paymentOption {
     transition: none;
   }
 }

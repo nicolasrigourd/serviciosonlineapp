@@ -3,6 +3,8 @@ import { useFlow } from "../../state/FlowContext";
 import { useNavigate } from "react-router-dom";
 import styles from "./DatosAdicionales.module.css";
 
+import mercadoPagoLogo from "../../assets/logomercadop.jpg";
+
 import { auth, db } from "../../services/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
@@ -28,21 +30,86 @@ function formatService(value) {
   return map[String(value || "").toLowerCase()] || "Envío";
 }
 
+function readOperationType(state) {
+  if (state?.operationType === "retiro") return "retiro";
+  if (state?.operationType === "envio") return "envio";
+
+  try {
+    const stored = sessionStorage.getItem("FLOW_OPERATION_TYPE");
+    if (stored === "retiro") return "retiro";
+    if (stored === "envio") return "envio";
+  } catch {}
+
+  return "envio";
+}
+
+function readSessionUser() {
+  try {
+    return JSON.parse(localStorage.getItem("SessionUser") || "null");
+  } catch {
+    return null;
+  }
+}
+
+function getUserDisplayName(user) {
+  return (
+    [user?.nombre, user?.apellido].filter(Boolean).join(" ") ||
+    user?.username ||
+    "Usuario"
+  );
+}
+
+function getUserPhone(user) {
+  return user?.telefono || "";
+}
+
+function getDefaultAddressExtra(user) {
+  const addresses = Array.isArray(user?.addresses) ? user.addresses : [];
+  const def = addresses.find((item) => item?.isDefault) || addresses[0] || null;
+
+  return {
+    piso: def?.piso || user?.dpto || "",
+    referencia: def?.referencia || def?.descripcion || "",
+  };
+}
+
+const PAYMENT_OPTIONS = {
+  cash: {
+    value: "cash",
+    label: "Efectivo",
+    subtitle: "El cliente paga al repartidor al finalizar.",
+    status: "pending_cash",
+    requiresCashHandling: true,
+    requiresMercadoPago: false,
+  },
+  mercadopago: {
+    value: "mercadopago",
+    label: "MercadoPago",
+    subtitle: "Solo repartidores habilitados para MercadoPago.",
+    status: "pending_digital",
+    requiresCashHandling: false,
+    requiresMercadoPago: true,
+  },
+};
+
 export default function DatosAdicionales() {
   const {
     state,
 
     // compat
-    setNotes,
     setContact,
 
     // setters nuevos
     setNotesFrom,
     setNotesTo,
+    setContactFrom,
+    setContactFromName,
     setContactTo,
     setDropoffApt,
     setRecipientName,
     setRecipientPhone,
+    setPaymentMethod: setPaymentMethodInFlow,
+    setPickupApt,
 
     buildOrder,
     saveOrder,
@@ -50,44 +117,97 @@ export default function DatosAdicionales() {
 
   const navigate = useNavigate();
 
-  const [userName, setUserName] = useState("");
-  const [userPhone, setUserPhone] = useState("");
+  const operationType = readOperationType(state);
+  const isRetiro = operationType === "retiro";
 
   const [origenNombre, setOrigenNombre] = useState("");
   const [origenTelefono, setOrigenTelefono] = useState("");
+  const [origenPisoRef, setOrigenPisoRef] = useState(
+    state.pickupApt || state.pickupReference || ""
+  );
 
   const [destNombre, setDestNombre] = useState(state.recipientName || "");
-  const [destTelefono, setDestTelefono] = useState(state.recipientPhone || "");
-  const [destPisoDpto, setDestPisoDpto] = useState(state.dropoffApt || "");
+  const [destTelefono, setDestTelefono] = useState(
+    state.recipientPhone || state.contactTo || ""
+  );
+  const [destPisoDpto, setDestPisoDpto] = useState(
+    state.dropoffApt || state.dropoffReference || ""
+  );
+
   const [notaOrigen, setNotaOrigen] = useState(state.notesFrom || "");
   const [notaDestino, setNotaDestino] = useState(state.notesTo || "");
+
+  const [paymentMethod, setPaymentMethod] = useState(() => {
+    if (state.paymentMethod === "cash") return "cash";
+    if (state.paymentMethod === "mercadopago") return "mercadopago";
+    return "";
+  });
 
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState("");
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("SessionUser");
-      const u = raw ? JSON.parse(raw) : null;
+    const u = readSessionUser();
+    const nombre = getUserDisplayName(u);
+    const telefono = getUserPhone(u);
+    const addressExtra = getDefaultAddressExtra(u);
 
-      const nombre =
-        [u?.nombre, u?.apellido].filter(Boolean).join(" ") ||
-        u?.username ||
-        "Usuario";
+    if (isRetiro) {
+      // RETIRO:
+      // Punto de retiro = lugar externo. Lo completa el usuario.
+      // Punto de entrega = dirección del usuario. Se precargan sus datos abajo.
+      setOrigenNombre((prev) => prev || state.contactFromName || "");
+      setOrigenTelefono((prev) => prev || state.contactFrom || "");
 
-      const telefono = u?.telefono || "";
+      setOrigenPisoRef((prev) => {
+        if (prev) return prev;
+        if (state.pickupApt) return state.pickupApt;
+        if (state.pickupReference) return state.pickupReference;
+        return "";
+      });
 
-      setUserName(nombre);
-      setUserPhone(telefono);
+      setDestNombre((prev) => prev || state.recipientName || nombre);
 
-      setOrigenNombre((prev) => prev || nombre);
-      setOrigenTelefono((prev) => prev || telefono);
-    } catch {
-      setUserName("Usuario");
-      setUserPhone("");
-      setOrigenNombre((prev) => prev || "Usuario");
-      setOrigenTelefono((prev) => prev || "");
+      setDestTelefono(
+        (prev) => prev || state.recipientPhone || state.contactTo || telefono
+      );
+
+      setDestPisoDpto((prev) => {
+        if (prev) return prev;
+        if (state.dropoffApt) return state.dropoffApt;
+        if (state.dropoffReference) return state.dropoffReference;
+        if (addressExtra.piso) return addressExtra.piso;
+        return "";
+      });
+    } else {
+      // ENVÍO:
+      // Punto de retiro = dirección del usuario. Se precargan sus datos arriba.
+      // Punto de entrega = destino externo. Lo completa el usuario.
+      setOrigenNombre((prev) => prev || state.contactFromName || nombre);
+      setOrigenTelefono((prev) => prev || state.contactFrom || telefono);
+
+      setOrigenPisoRef((prev) => {
+        if (prev) return prev;
+        if (state.pickupApt) return state.pickupApt;
+        if (state.pickupReference) return state.pickupReference;
+        if (addressExtra.piso) return addressExtra.piso;
+        return "";
+      });
+
+      setDestNombre((prev) => prev || state.recipientName || "");
+
+      setDestTelefono(
+        (prev) => prev || state.recipientPhone || state.contactTo || ""
+      );
+
+      setDestPisoDpto((prev) => {
+        if (prev) return prev;
+        if (state.dropoffApt) return state.dropoffApt;
+        if (state.dropoffReference) return state.dropoffReference;
+        return "";
+      });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const precio = useMemo(() => {
@@ -102,6 +222,8 @@ export default function DatosAdicionales() {
 
   const serviceLabel = formatService(state.serviceType);
 
+  const selectedPayment = paymentMethod ? PAYMENT_OPTIONS[paymentMethod] : null;
+
   const canSubmit =
     !submitting &&
     Boolean(state.origin) &&
@@ -109,37 +231,48 @@ export default function DatosAdicionales() {
     Boolean(origenNombre.trim()) &&
     Boolean(onlyDigits(origenTelefono)) &&
     Boolean(destNombre.trim()) &&
-    Boolean(onlyDigits(destTelefono));
+    Boolean(onlyDigits(destTelefono)) &&
+    Boolean(paymentMethod);
 
   const validate = () => {
     if (!state.origin) return "Falta la dirección de origen.";
     if (!state.destination) return "Falta la dirección de destino.";
 
     if (!origenNombre.trim()) {
-      return "Indicá quién entregará el pedido en origen.";
+      return "Indicá quién entrega el pedido en el punto de retiro.";
     }
 
     if (!onlyDigits(origenTelefono)) {
-      return "Indicá un teléfono de contacto en origen.";
+      return "Indicá un teléfono de contacto en el punto de retiro.";
     }
 
     if (onlyDigits(origenTelefono).length < 6) {
-      return "El teléfono de origen parece incompleto.";
+      return "El teléfono del punto de retiro parece incompleto.";
     }
 
     if (!destNombre.trim()) {
-      return "Indicá quién recibirá en destino.";
+      return "Indicá quién recibe el pedido en el punto de entrega.";
     }
 
     if (!onlyDigits(destTelefono)) {
-      return "Indicá un teléfono de contacto en destino.";
+      return "Indicá un teléfono de contacto en el punto de entrega.";
     }
 
     if (onlyDigits(destTelefono).length < 6) {
-      return "El teléfono de destino parece incompleto.";
+      return "El teléfono del punto de entrega parece incompleto.";
+    }
+
+    if (!paymentMethod) {
+      return "Seleccioná una forma de pago para poder asignar correctamente el pedido.";
     }
 
     return "";
+  };
+
+  const handlePaymentSelect = (method) => {
+    setPaymentMethod(method);
+    setPaymentMethodInFlow?.(method);
+    setLocalError("");
   };
 
   const handleSolicitar = async () => {
@@ -154,46 +287,48 @@ export default function DatosAdicionales() {
 
     const senderName = origenNombre.trim();
     const senderPhone = onlyDigits(origenTelefono);
+    const pickupFloor = origenPisoRef.trim();
 
     const recipientName = destNombre.trim();
     const recipientPhone = onlyDigits(destTelefono);
-    const floor = destPisoDpto.trim();
+    const dropoffFloor = destPisoDpto.trim();
 
     const noteFrom = notaOrigen.trim();
     const noteTo = notaDestino.trim();
 
+    const currentPayment = PAYMENT_OPTIONS[paymentMethod];
+
     setLocalError("");
 
-    // Persistimos en context antes de construir la orden
+    // Persistimos en context antes de construir la orden.
+    setContactFromName?.(senderName);
+    setContactFrom?.(senderPhone);
     setRecipientName?.(recipientName);
     setRecipientPhone?.(recipientPhone);
     setContactTo?.(recipientPhone);
     setNotesFrom?.(noteFrom);
     setNotesTo?.(noteTo);
-    setDropoffApt?.(floor);
+    setDropoffApt?.(dropoffFloor);
+    setPickupApt?.(pickupFloor);
+    setPaymentMethodInFlow?.(currentPayment.value);
 
-    // Compat
+    // Compatibilidad: solo contacto. NO usar setNotes.
     setContact?.(recipientPhone);
-    setNotes?.(
-      [
-        noteFrom ? `ORIGEN: ${noteFrom}` : "",
-        noteTo ? `DESTINO: ${noteTo}` : "",
-      ]
-        .filter(Boolean)
-        .join(" | ")
-    );
 
     try {
-      const su = JSON.parse(localStorage.getItem("SessionUser") || "null");
+      const su = readSessionUser();
 
       let order = buildOrder?.(su) || {};
+
+      const finalPrice =
+        Number(order.price || 0) > 0 ? Number(order.price) : precio;
 
       order = {
         ...order,
 
         id: order.id || `ORD-${Date.now()}`,
 
-        version: 1,
+        version: 2,
         appSource: "customer_app",
         createdBy: "customer_app",
 
@@ -204,11 +339,14 @@ export default function DatosAdicionales() {
         assignmentStatus: "unassigned",
 
         tipoPedido: "online",
+        operationType,
         assignmentScope: "online",
+
         allowsFallbackToLocal:
           typeof order.allowsFallbackToLocal === "boolean"
             ? order.allowsFallbackToLocal
             : true,
+
         priority: order.priority || "normal",
 
         customerUid:
@@ -217,10 +355,76 @@ export default function DatosAdicionales() {
 
         customerPhone: order.customerPhone || su?.telefono || "",
 
-        price: Number(order.price || 0) > 0 ? Number(order.price) : precio,
+        serviceType: order.serviceType || state.serviceType || "simple",
 
-        paymentMethod: order.paymentMethod === "digital" ? "digital" : "cash",
-        requiresCashHandling: order.paymentMethod === "digital" ? false : true,
+        origin: state.origin || order.origin || "",
+        originCoords: state.originCoords || order.originCoords || null,
+
+        destination: state.destination || order.destination || "",
+        destinationCoords:
+          state.destinationCoords || order.destinationCoords || null,
+
+        km: Number(state.km || order.km || 0),
+        price: finalPrice,
+
+        // Datos específicos del punto de retiro
+        pickupApt: pickupFloor,
+        pickupReference: pickupFloor,
+
+        // Datos específicos del punto de entrega
+        dropoffApt: dropoffFloor,
+        dropoffReference: dropoffFloor,
+
+        // Estructura clara para Zeus / panel / app repartidor
+        pickup: {
+          address: state.origin || "",
+          coords: state.originCoords || null,
+          contactName: senderName,
+          contactPhone: senderPhone,
+          floorOrReference: pickupFloor,
+          notes: noteFrom,
+        },
+
+        dropoff: {
+          address: state.destination || "",
+          coords: state.destinationCoords || null,
+          contactName: recipientName,
+          contactPhone: recipientPhone,
+          floorOrReference: dropoffFloor,
+          notes: noteTo,
+        },
+
+        paymentMethod: currentPayment.value,
+        paymentLabel: currentPayment.label,
+        paymentStatus: currentPayment.status,
+        paymentAmount: finalPrice,
+        paymentCurrency: "ARS",
+        paymentProvider:
+          currentPayment.value === "mercadopago" ? "mercadopago" : null,
+
+        requiresCashHandling: currentPayment.requiresCashHandling,
+        requiresMercadoPago: currentPayment.requiresMercadoPago,
+
+        matchRequirements: {
+          ...(order.matchRequirements || {}),
+          operationType,
+          serviceType: state.serviceType || order.serviceType || "simple",
+          paymentMethod: currentPayment.value,
+          requiresCashHandling: currentPayment.requiresCashHandling,
+          requiresMercadoPago: currentPayment.requiresMercadoPago,
+        },
+
+        payment: {
+          method: currentPayment.value,
+          label: currentPayment.label,
+          status: currentPayment.status,
+          amount: finalPrice,
+          currency: "ARS",
+          provider:
+            currentPayment.value === "mercadopago" ? "mercadopago" : null,
+          requiresCashHandling: currentPayment.requiresCashHandling,
+          requiresMercadoPago: currentPayment.requiresMercadoPago,
+        },
 
         contactFrom: senderPhone,
         contactTo: recipientPhone,
@@ -228,14 +432,15 @@ export default function DatosAdicionales() {
         sender: {
           name: senderName,
           phone: senderPhone,
+          floor: pickupFloor,
+          floorOrReference: pickupFloor,
         },
-
-        dropoffApt: floor,
 
         recipient: {
           name: recipientName,
           phone: recipientPhone,
-          floor,
+          floor: dropoffFloor,
+          floorOrReference: dropoffFloor,
         },
 
         notesFrom: noteFrom,
@@ -294,8 +499,12 @@ export default function DatosAdicionales() {
         </button>
 
         <div className={styles.headerText}>
-          <h1 className={styles.title}>Datos adicionales</h1>
-          <p className={styles.subtitle}>Completá los contactos del envío.</p>
+          <h1 className={styles.title}>
+            {isRetiro ? "Completá el retiro" : "Completá el envío"}
+          </h1>
+          <p className={styles.subtitle}>
+            Revisá los datos antes de confirmar.
+          </p>
         </div>
 
         {state.serviceType && (
@@ -310,29 +519,26 @@ export default function DatosAdicionales() {
           </div>
         )}
 
-        <section className={styles.card} aria-label="Origen">
-          <div className={styles.cardHeader}>
-            <div className={styles.cardIcon}>{pinIcon}</div>
-
-            <div className={styles.cardTitleBlock}>
-              <h2 className={styles.cardTitle}>Origen</h2>
-              <p className={styles.cardText}>Datos para retirar el pedido.</p>
+        <section className={styles.flowCard} aria-label="Punto de retiro">
+          <div className={styles.sectionTop}>
+            <div>
+              <p className={styles.stepLabel}>Punto de retiro</p>
+              <h2 className={styles.sectionTitle}>¿Dónde se retira?</h2>
             </div>
+            <span className={styles.sectionMark}>01</span>
           </div>
 
-          <div className={styles.addressBox}>
-            <span className={styles.addressIcon}>{pinIcon}</span>
-
-            <div className={styles.addressText}>
-              <span>Dirección de retiro</span>
-              <strong>{state.origin || "—"}</strong>
-            </div>
+          <div className={styles.addressLine}>
+            <span className={styles.addressDot}>{pinIcon}</span>
+            <strong>{state.origin || "—"}</strong>
           </div>
+
+          <div className={styles.softDivider} />
 
           <div className={styles.row2}>
             <div className={styles.field}>
               <label className={styles.label} htmlFor="origenNombre">
-                Nombre de quien entrega
+                Quién entrega
               </label>
               <input
                 id="origenNombre"
@@ -349,7 +555,7 @@ export default function DatosAdicionales() {
 
             <div className={styles.field}>
               <label className={styles.label} htmlFor="origenTel">
-                Teléfono de origen
+                Teléfono
               </label>
               <input
                 id="origenTel"
@@ -367,8 +573,22 @@ export default function DatosAdicionales() {
           </div>
 
           <div className={styles.field}>
+            <label className={styles.label} htmlFor="origenPisoRef">
+              Piso, dpto, local o referencia del retiro
+            </label>
+            <input
+              id="origenPisoRef"
+              className={styles.input}
+              type="text"
+              placeholder="Ej: local 4, piso 2, recepción, casa del fondo"
+              value={origenPisoRef}
+              onChange={(e) => setOrigenPisoRef(e.target.value)}
+            />
+          </div>
+
+          <div className={styles.field}>
             <label className={styles.label} htmlFor="notaOrigen">
-              ¿Querés aclarar algo al repartidor?
+              Aclaración para retirar
             </label>
             <textarea
               id="notaOrigen"
@@ -383,29 +603,26 @@ export default function DatosAdicionales() {
           </div>
         </section>
 
-        <section className={styles.card} aria-label="Destino">
-          <div className={styles.cardHeader}>
-            <div className={styles.cardIcon}>{destinationIcon}</div>
-
-            <div className={styles.cardTitleBlock}>
-              <h2 className={styles.cardTitle}>Destino</h2>
-              <p className={styles.cardText}>Datos para entregar el pedido.</p>
+        <section className={styles.flowCard} aria-label="Punto de entrega">
+          <div className={styles.sectionTop}>
+            <div>
+              <p className={styles.stepLabel}>Punto de entrega</p>
+              <h2 className={styles.sectionTitle}>¿Dónde se entrega?</h2>
             </div>
+            <span className={styles.sectionMark}>02</span>
           </div>
 
-          <div className={styles.addressBox}>
-            <span className={styles.addressIcon}>{destinationIcon}</span>
-
-            <div className={styles.addressText}>
-              <span>Dirección de entrega</span>
-              <strong>{state.destination || "—"}</strong>
-            </div>
+          <div className={styles.addressLine}>
+            <span className={styles.addressDot}>{destinationIcon}</span>
+            <strong>{state.destination || "—"}</strong>
           </div>
+
+          <div className={styles.softDivider} />
 
           <div className={styles.row2}>
             <div className={styles.field}>
               <label className={styles.label} htmlFor="destNombre">
-                ¿Quién recibirá?
+                Quién recibe
               </label>
               <input
                 id="destNombre"
@@ -422,7 +639,7 @@ export default function DatosAdicionales() {
 
             <div className={styles.field}>
               <label className={styles.label} htmlFor="destTel">
-                Teléfono de contacto
+                Teléfono
               </label>
               <input
                 id="destTel"
@@ -441,13 +658,19 @@ export default function DatosAdicionales() {
 
           <div className={styles.field}>
             <label className={styles.label} htmlFor="destPiso">
-              Piso / Dpto / referencia interna
+              {isRetiro
+                ? "Piso, dpto o referencia de tu dirección"
+                : "Piso, dpto o referencia de entrega"}
             </label>
             <input
               id="destPiso"
               className={styles.input}
               type="text"
-              placeholder="Ej: 7 B, local 3, casa del fondo"
+              placeholder={
+                isRetiro
+                  ? "Ej: piso, dpto, casa del fondo o referencia de entrega"
+                  : "Ej: 7 B, local 3, casa del fondo"
+              }
               value={destPisoDpto}
               onChange={(e) => setDestPisoDpto(e.target.value)}
             />
@@ -455,7 +678,7 @@ export default function DatosAdicionales() {
 
           <div className={styles.field}>
             <label className={styles.label} htmlFor="notaDestino">
-              ¿Aclaraciones para el repartidor?
+              Aclaración para entregar
             </label>
             <textarea
               id="notaDestino"
@@ -469,11 +692,87 @@ export default function DatosAdicionales() {
             <div className={styles.counter}>{notaDestino.length}/160</div>
           </div>
         </section>
+
+        <section className={styles.paymentCard} aria-label="Método de pago">
+          <div className={styles.sectionTop}>
+            <div>
+              <p className={styles.stepLabel}>Pago</p>
+              <h2 className={styles.sectionTitle}>¿Cómo querés pagar?</h2>
+            </div>
+
+            <span
+              className={`${styles.paymentState} ${
+                selectedPayment ? styles.paymentStateReady : ""
+              }`}
+            >
+              {selectedPayment ? selectedPayment.label : "Pendiente"}
+            </span>
+          </div>
+
+          <p className={styles.paymentIntro}>
+            Seleccioná la forma de pago para habilitar la confirmación del
+            pedido.
+          </p>
+
+          <div className={styles.paymentOptions}>
+            <button
+              type="button"
+              className={`${styles.paymentOption} ${
+                paymentMethod === "cash" ? styles.paymentOptionActive : ""
+              }`}
+              onClick={() => handlePaymentSelect("cash")}
+            >
+              <div className={styles.cashIconWrap}>{cashIcon}</div>
+
+              <div className={styles.paymentOptionInfo}>
+                <strong>Efectivo</strong>
+                <span>El cliente paga al repartidor al finalizar.</span>
+              </div>
+
+              <div className={styles.paymentCheck}>
+                {paymentMethod === "cash" ? "✓" : ""}
+              </div>
+            </button>
+
+            <button
+              type="button"
+              className={`${styles.paymentOption} ${
+                paymentMethod === "mercadopago"
+                  ? styles.paymentOptionActive
+                  : ""
+              }`}
+              onClick={() => handlePaymentSelect("mercadopago")}
+            >
+              <div className={styles.mpLogoWrap}>
+                <img
+                  src={mercadoPagoLogo}
+                  alt="MercadoPago"
+                  className={styles.mpLogo}
+                />
+              </div>
+
+              <div className={styles.paymentOptionInfo}>
+                <strong>MercadoPago</strong>
+                <span>Solo repartidores habilitados para MercadoPago.</span>
+              </div>
+
+              <div className={styles.paymentCheck}>
+                {paymentMethod === "mercadopago" ? "✓" : ""}
+              </div>
+            </button>
+          </div>
+
+          {!paymentMethod && (
+            <p className={styles.paymentWarning}>
+              Todavía falta elegir cómo se pagará el envío.
+            </p>
+          )}
+        </section>
       </main>
 
       <footer className={styles.footer}>
         <div className={styles.priceWrap}>
-          <span className={styles.priceLabel}>Precio</span>
+          <span className={styles.priceLabel}>Total</span>
           <span className={styles.priceValue}>{formatMoney(precio)}</span>
         </div>
 
@@ -493,8 +792,8 @@ export default function DatosAdicionales() {
 const pinIcon = (
   <svg
     viewBox="0 0 24 24"
-    width="19"
-    height="19"
+    width="18"
+    height="18"
     fill="none"
     stroke="currentColor"
     strokeWidth="2"
@@ -507,8 +806,8 @@ const pinIcon = (
 const destinationIcon = (
   <svg
     viewBox="0 0 24 24"
-    width="19"
-    height="19"
+    width="18"
+    height="18"
     fill="none"
     stroke="currentColor"
     strokeWidth="2"
@@ -516,5 +815,22 @@ const destinationIcon = (
     <circle cx="12" cy="12" r="9" />
     <circle cx="12" cy="12" r="3" />
     <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
+  </svg>
+);
+
+const cashIcon = (
+  <svg
+    viewBox="0 0 24 24"
+    width="22"
+    height="22"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="3" y="6" width="18" height="12" rx="2.5" />
+    <circle cx="12" cy="12" r="2.3" />
+    <path d="M6.5 9.2h.01M17.5 14.8h.01" />
   </svg>
 );
