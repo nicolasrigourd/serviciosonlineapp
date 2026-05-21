@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc, serverTimestamp } from "firebase/firestore";
 
 import { useFlow } from "../../state/FlowContext";
 import styles from "./Checkout.module.css";
@@ -9,7 +9,88 @@ import { cancelActualAndArchive } from "../../lib/pedidosStore";
 import TrackingPedido from "../../components/TrackingPedido/TrackingPedido";
 
 function norm(value) {
-  return String(value || "").toLowerCase();
+  return String(value || "").toLowerCase().trim();
+}
+
+function getOrderId(pedido) {
+  return String(pedido?.orderId || pedido?.id || pedido?._docId || "").trim();
+}
+
+function getServerStatus(pedido) {
+  return norm(pedido?.server?.status || pedido?.serverStatus);
+}
+
+function getAssignmentStatus(pedido) {
+  return norm(pedido?.assignment?.status || pedido?.assignmentStatus);
+}
+
+function getOrderStatus(pedido) {
+  const status = norm(pedido?.status);
+
+  if (status === "pendiente") return "pending";
+  if (status === "ofertando") return "offering";
+  if (status === "asignado") return "assigned";
+  if (status === "finalizado") return "completed";
+  if (status === "cancelado") return "cancelled";
+
+  return status;
+}
+
+function getDeliveryStep(pedido) {
+  return norm(
+    pedido?.delivery?.currentStep ||
+      pedido?.currentStep ||
+      pedido?.statusOperativo ||
+      ""
+  );
+}
+
+function getDeliveryStatus(pedido) {
+  return norm(pedido?.delivery?.operationalStatus || pedido?.statusOperativo || "");
+}
+
+function getAssignedDriver(pedido) {
+  return (
+    pedido?.assignment?.assignedDriver ||
+    pedido?.offer?.driver ||
+    pedido?.assignedDriver ||
+    pedido?.assignedCadete ||
+    null
+  );
+}
+
+function hasAssignedDriver(pedido) {
+  const status = getOrderStatus(pedido);
+  const assignmentStatus = getAssignmentStatus(pedido);
+  const serverStatus = getServerStatus(pedido);
+
+  return Boolean(
+    status === "assigned" ||
+      assignmentStatus === "assigned" ||
+      serverStatus === "matched" ||
+      pedido?.assignedDriverId ||
+      pedido?.assignedCadeteId ||
+      pedido?.assignment?.assignedDriverId ||
+      getAssignedDriver(pedido)
+  );
+}
+
+function isCompleted(pedido) {
+  const status = getOrderStatus(pedido);
+  const step = getDeliveryStep(pedido);
+  const deliveryStatus = getDeliveryStatus(pedido);
+
+  return (
+    status === "completed" ||
+    status === "delivered" ||
+    step === "delivered" ||
+    deliveryStatus === "delivered"
+  );
+}
+
+function isCancelled(pedido) {
+  const status = getOrderStatus(pedido);
+  return status === "cancelled" || status === "canceled";
 }
 
 function getCheckoutWaitingState(pedido) {
@@ -27,17 +108,53 @@ function getCheckoutWaitingState(pedido) {
     };
   }
 
+  const status = getOrderStatus(pedido);
+  const serverStatus = getServerStatus(pedido);
+  const assignmentStatus = getAssignmentStatus(pedido);
+  const deliveryStep = getDeliveryStep(pedido);
+  const deliveryStatus = getDeliveryStatus(pedido);
+
+  if (isCancelled(pedido)) {
+    return {
+      title: "Pedido cancelado",
+      headline: "La solicitud fue cancelada",
+      description:
+        "Este pedido ya no se encuentra activo. Podés crear un nuevo envío cuando quieras.",
+      reassure: "No se continuará buscando repartidor para este pedido.",
+      messages: ["Pedido cancelado…"],
+      badge: "CANCELADO",
+      tone: "central",
+      visual: "box",
+      currentStep: "created",
+    };
+  }
+
+  if (isCompleted(pedido)) {
+    return {
+      title: "Pedido entregado",
+      headline: "Tu envío fue finalizado",
+      description:
+        "El repartidor marcó la entrega como completada. Gracias por usar el servicio.",
+      reassure: "Podés consultar este pedido desde tu historial.",
+      messages: ["Pedido finalizado…"],
+      badge: "ENTREGADO",
+      tone: "central",
+      visual: "box",
+      currentStep: "dropoff",
+    };
+  }
+
   if (
-    pedido?.assignmentStatus === "fallback_to_local" ||
-    pedido?.serverStatus === "fallback_local"
+    assignmentStatus === "fallback_to_local" ||
+    serverStatus === "fallback_local" ||
+    pedido?.assignment?.manager === "engine"
   ) {
     return {
       title: "Lo gestiona la central",
       headline: "Tu pedido no queda sin atención",
       description:
         "No encontramos disponibilidad automática por ahora. La central local va a coordinarlo manualmente.",
-      reassure:
-        "Podés volver al inicio tranquilo. Te avisaremos cuando avance.",
+      reassure: "Podés volver al inicio tranquilo. Te avisaremos cuando avance.",
       messages: [
         "Central coordinando disponibilidad…",
         "Buscando la mejor opción local…",
@@ -50,7 +167,7 @@ function getCheckoutWaitingState(pedido) {
     };
   }
 
-  if (pedido?.serverStatus === "retrying_match") {
+  if (serverStatus === "retrying_match") {
     return {
       title: "Seguimos buscando",
       headline: "Estamos consultando otra disponibilidad",
@@ -70,17 +187,17 @@ function getCheckoutWaitingState(pedido) {
   }
 
   if (
-    pedido?.status === "ofertando" ||
-    pedido?.serverStatus === "waiting_driver_response" ||
-    pedido?.assignmentStatus === "offering"
+    status === "offering" ||
+    serverStatus === "waiting_driver_response" ||
+    assignmentStatus === "offering" ||
+    pedido?.offer?.status === "pending"
   ) {
     return {
       title: "Un repartidor está revisando tu pedido",
       headline: "Esperando respuesta",
       description:
         "Le enviamos la solicitud a un repartidor cercano. Estamos esperando que confirme si puede tomarlo.",
-      reassure:
-        "Apenas responda, actualizamos el seguimiento automáticamente.",
+      reassure: "Apenas responda, actualizamos el seguimiento automáticamente.",
       messages: [
         "Solicitud enviada al repartidor…",
         "Esperando respuesta…",
@@ -94,9 +211,122 @@ function getCheckoutWaitingState(pedido) {
   }
 
   if (
-    pedido?.serverStatus === "validated_online" ||
-    pedido?.assignmentStatus === "unassigned" ||
-    pedido?.status === "pendiente"
+    status === "assigned" ||
+    assignmentStatus === "assigned" ||
+    serverStatus === "matched"
+  ) {
+    if (
+      deliveryStep === "started_pickup" ||
+      deliveryStatus === "started_pickup"
+    ) {
+      return {
+        title: "El repartidor va al origen",
+        headline: "En camino al punto de retiro",
+        description:
+          "El repartidor ya comenzó el recorrido hacia el punto de retiro.",
+        reassure: "El seguimiento se actualizará cuando llegue al origen.",
+        messages: [
+          "Repartidor en camino al origen…",
+          "Actualizando recorrido…",
+          "Seguimiento activo…",
+        ],
+        badge: "EN CAMINO",
+        tone: "offering",
+        visual: "driver",
+        currentStep: "pickup",
+      };
+    }
+
+    if (
+      deliveryStep === "arrived_pickup" ||
+      deliveryStatus === "arrived_pickup"
+    ) {
+      return {
+        title: "El repartidor llegó al origen",
+        headline: "Retiro en proceso",
+        description:
+          "El repartidor está en el punto de retiro y está preparando la salida hacia el destino.",
+        reassure: "Te avisaremos cuando el pedido sea retirado.",
+        messages: [
+          "Repartidor en origen…",
+          "Esperando retiro del pedido…",
+          "Validando datos del retiro…",
+        ],
+        badge: "EN ORIGEN",
+        tone: "offering",
+        visual: "driver",
+        currentStep: "pickup",
+      };
+    }
+
+    if (
+      deliveryStep === "go_to_dropoff" ||
+      deliveryStatus === "picked_up" ||
+      deliveryStep === "picked_up"
+    ) {
+      return {
+        title: "Pedido retirado",
+        headline: "El repartidor va hacia el destino",
+        description:
+          "El pedido ya fue retirado y el repartidor se dirige al punto de entrega.",
+        reassure: "El seguimiento se actualizará cuando llegue al destino.",
+        messages: [
+          "Pedido retirado…",
+          "En camino al destino…",
+          "Actualizando seguimiento…",
+        ],
+        badge: "EN VIAJE",
+        tone: "offering",
+        visual: "driver",
+        currentStep: "dropoff",
+      };
+    }
+
+    if (
+      deliveryStep === "arrived_dropoff" ||
+      deliveryStatus === "arrived_dropoff"
+    ) {
+      return {
+        title: "El repartidor llegó al destino",
+        headline: "Entrega en proceso",
+        description:
+          "El repartidor está en el punto de entrega. El pedido está por finalizar.",
+        reassure: "Te avisaremos cuando se marque como entregado.",
+        messages: [
+          "Repartidor en destino…",
+          "Entrega en proceso…",
+          "Finalizando pedido…",
+        ],
+        badge: "EN DESTINO",
+        tone: "offering",
+        visual: "driver",
+        currentStep: "dropoff",
+      };
+    }
+
+    return {
+      title: "Repartidor asignado",
+      headline: "Tu pedido ya fue tomado",
+      description:
+        "Un repartidor aceptó tu pedido. En breve comenzará el recorrido hacia el punto de retiro.",
+      reassure: "Ya podés seguir el avance del pedido en tiempo real.",
+      messages: [
+        "Repartidor asignado…",
+        "Preparando recorrido…",
+        "Seguimiento activado…",
+      ],
+      badge: "ASIGNADO",
+      tone: "offering",
+      visual: "driver",
+      currentStep: "assigned",
+    };
+  }
+
+  if (
+    serverStatus === "validated_online" ||
+    serverStatus === "pending_validation" ||
+    assignmentStatus === "unassigned" ||
+    status === "pending"
   ) {
     return {
       title: "Estamos buscando repartidor",
@@ -134,17 +364,6 @@ function getCheckoutWaitingState(pedido) {
     visual: "box",
     currentStep: "created",
   };
-}
-
-function hasAssignedDriver(pedido) {
-  return Boolean(
-    pedido?.status === "asignado" ||
-      pedido?.assignmentStatus === "assigned" ||
-      pedido?.serverStatus === "matched" ||
-      pedido?.assignedCadete?.id ||
-      pedido?.assignedCadete?.cadeteId ||
-      pedido?.assignedCadete?.nombre
-  );
 }
 
 function formatTimestamp(value) {
@@ -187,6 +406,7 @@ function shortOrderId(id) {
 function getPickupAddress(pedido) {
   return (
     pedido?.pickup?.address ||
+    pedido?.pickup?.input ||
     pedido?.originInput ||
     pedido?.origin ||
     "Punto de retiro no informado"
@@ -196,6 +416,7 @@ function getPickupAddress(pedido) {
 function getDropoffAddress(pedido) {
   return (
     pedido?.dropoff?.address ||
+    pedido?.dropoff?.input ||
     pedido?.destinationInput ||
     pedido?.destination ||
     "Punto de entrega no informado"
@@ -204,6 +425,7 @@ function getDropoffAddress(pedido) {
 
 function getPickupContact(pedido) {
   return (
+    pedido?.pickup?.contact?.fullName ||
     pedido?.pickup?.contactName ||
     pedido?.sender?.name ||
     pedido?.contactFromName ||
@@ -213,6 +435,7 @@ function getPickupContact(pedido) {
 
 function getDropoffContact(pedido) {
   return (
+    pedido?.dropoff?.contact?.fullName ||
     pedido?.dropoff?.contactName ||
     pedido?.recipient?.name ||
     pedido?.recipientName ||
@@ -222,11 +445,54 @@ function getDropoffContact(pedido) {
 
 function formatPayment(pedido) {
   const method = pedido?.payment?.method || pedido?.paymentMethod;
+  const provider = pedido?.payment?.provider || pedido?.paymentProvider;
 
   if (method === "cash") return "Efectivo";
+  if (method === "digital" && provider === "mercadopago") return "MercadoPago";
+  if (method === "digital") return "Digital";
   if (method === "mercadopago") return "MercadoPago";
 
-  return pedido?.paymentLabel || "No informado";
+  return pedido?.payment?.label || pedido?.paymentLabel || "No informado";
+}
+
+function getPrice(pedido) {
+  return (
+    pedido?.pricing?.price ??
+    pedido?.payment?.amount ??
+    pedido?.price ??
+    pedido?.breakdown?.total ??
+    0
+  );
+}
+
+function getDistanceKm(pedido) {
+  return (
+    pedido?.route?.distanceKm ??
+    pedido?.km ??
+    pedido?.breakdown?.km ??
+    0
+  );
+}
+
+function getServiceLabel(pedido) {
+  return (
+    pedido?.service?.label ||
+    pedido?.service?.type ||
+    pedido?.serviceType ||
+    "Simple"
+  );
+}
+
+function getDriverName(pedido) {
+  const driver = getAssignedDriver(pedido);
+
+  return (
+    driver?.fullName ||
+    [driver?.firstName || driver?.nombre, driver?.lastName || driver?.apellido]
+      .filter(Boolean)
+      .join(" ") ||
+    "Repartidor asignado"
+  );
 }
 
 function getProgressSteps(waitingState) {
@@ -246,12 +512,12 @@ function getProgressSteps(waitingState) {
     {
       key: "assigned",
       label: "Asignado",
-      helper: "pendiente",
+      helper: "confirmado",
     },
     {
       key: "pickup",
       label: "Retiro",
-      helper: "pendiente",
+      helper: "en proceso",
     },
     {
       key: "dropoff",
@@ -262,9 +528,7 @@ function getProgressSteps(waitingState) {
 
   const order = ["created", "searching", "assigned", "pickup", "dropoff"];
   const currentIndex =
-    current === "central"
-      ? 1
-      : Math.max(0, order.indexOf(current));
+    current === "central" ? 1 : Math.max(0, order.indexOf(current));
 
   return steps.map((step, index) => ({
     ...step,
@@ -378,7 +642,7 @@ export default function Checkout() {
     }
   }, []);
 
-  const pedidoId = pedido?.id ? String(pedido.id) : "";
+  const pedidoId = getOrderId(pedido);
 
   useEffect(() => {
     if (!pedidoId) return;
@@ -394,12 +658,16 @@ export default function Checkout() {
 
         const pedidoActualizado = {
           ...data,
-          id: data.id || snapshot.id,
+
+          id: data.orderId || data.id || snapshot.id,
+          orderId: data.orderId || snapshot.id,
+
           createdAt: formatTimestamp(data.createdAt),
+          updatedAt: formatTimestamp(data.updatedAt),
           lastUpdate: formatTimestamp(data.lastUpdate),
-          assignedAt: formatTimestamp(data.assignedAt),
-          serverReviewAt: formatTimestamp(data.serverReviewAt),
-          finishedAt: formatTimestamp(data.finishedAt),
+          assignedAt: formatTimestamp(data.assignment?.assignedAt || data.assignedAt),
+          serverReviewAt: formatTimestamp(data.server?.reviewAt || data.serverReviewAt),
+          finishedAt: formatTimestamp(data.delivery?.finishedAt || data.finishedAt),
         };
 
         setPedido((prev) => {
@@ -438,14 +706,32 @@ export default function Checkout() {
   }, [mensajes]);
 
   const precio = useMemo(() => {
-    const p = Number(pedido?.price || pedido?.breakdown?.total || 0);
-    return p > 0 ? p : 0;
+    return Number(getPrice(pedido) || 0);
   }, [pedido]);
 
   const tieneRepartidorAsignado = hasAssignedDriver(pedido);
 
-  const handleCancelar = () => {
+  const handleCancelar = async () => {
     if (!confirm("¿Seguro que querés cancelar este pedido?")) return;
+
+    const id = getOrderId(pedido);
+
+    try {
+      if (id) {
+        await updateDoc(doc(db, "orders", id), {
+          status: "cancelled",
+          updatedAt: serverTimestamp(),
+          "cancellation.cancelledAt": serverTimestamp(),
+          "cancellation.reason": "customer_cancelled_from_checkout",
+
+          // Compatibilidad temporal.
+          lastUpdate: serverTimestamp(),
+        });
+      }
+    } catch (error) {
+      console.error("[CHECKOUT][CANCEL] Error cancelando pedido:", error);
+    }
+
     cancelActualAndArchive();
     reset?.();
     navigate("/orders", { replace: true });
@@ -487,6 +773,7 @@ export default function Checkout() {
   const pickupContact = getPickupContact(pedido);
   const dropoffContact = getDropoffContact(pedido);
   const paymentLabel = formatPayment(pedido);
+  const driverName = getDriverName(pedido);
 
   return (
     <div className={styles.screen}>
@@ -509,7 +796,9 @@ export default function Checkout() {
             <StatusIllustration type={waitingState.visual} />
 
             <div className={styles.heroText}>
-              <span className={styles.kicker}>Pedido {shortOrderId(pedido.id)}</span>
+              <span className={styles.kicker}>
+                Pedido {shortOrderId(getOrderId(pedido))}
+              </span>
               <h1>{waitingState.title}</h1>
               <h2>{waitingState.headline}</h2>
               <p>{waitingState.description}</p>
@@ -521,6 +810,13 @@ export default function Checkout() {
             <strong key={msgIdx}>{mensajes[msgIdx]}</strong>
           </div>
         </section>
+
+        {hasAssignedDriver(pedido) && (
+          <section className={styles.reassureCard}>
+            <div className={styles.reassureIcon}>{driverMiniIcon}</div>
+            <p>{driverName}</p>
+          </section>
+        )}
 
         <section className={styles.timelineCard} aria-label="Progreso del pedido">
           <div className={styles.sectionHeader}>
@@ -599,18 +895,20 @@ export default function Checkout() {
           <div className={styles.metaGrid}>
             <div>
               <span>Distancia</span>
-              <strong>{formatDistance(pedido.km)}</strong>
+              <strong>{formatDistance(getDistanceKm(pedido))}</strong>
             </div>
 
             <div>
               <span>Servicio</span>
-              <strong>{pedido.serviceType || "Simple"}</strong>
+              <strong>{getServiceLabel(pedido)}</strong>
             </div>
 
             <div>
               <span>Gestión</span>
               <strong>
-                {pedido.assignmentStatus === "fallback_to_local"
+                {pedido?.assignment?.manager === "engine" ||
+                pedido?.assignmentManager === "engine" ||
+                getServerStatus(pedido) === "fallback_local"
                   ? "Central"
                   : "Online"}
               </strong>
@@ -625,13 +923,15 @@ export default function Checkout() {
       </main>
 
       <footer className={styles.footer}>
-        <button
-          className={styles.secondaryBtn}
-          type="button"
-          onClick={handleCancelar}
-        >
-          Cancelar
-        </button>
+        {!hasAssignedDriver(pedido) && !isCompleted(pedido) && !isCancelled(pedido) && (
+          <button
+            className={styles.secondaryBtn}
+            type="button"
+            onClick={handleCancelar}
+          >
+            Cancelar
+          </button>
+        )}
 
         <button
           className={styles.ghostBtn}
@@ -680,6 +980,13 @@ const sparkIcon = (
   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2z" />
     <path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16z" />
+  </svg>
+);
+
+const driverMiniIcon = (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="7" r="4" />
+    <path d="M5 21a7 7 0 0 1 14 0" />
   </svg>
 );
 

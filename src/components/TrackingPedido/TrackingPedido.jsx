@@ -5,39 +5,100 @@ import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import styles from "./TrackingPedido.module.css";
 
-function getCadeteNombre(cadete) {
-  if (!cadete) return "Repartidor asignado";
+const STEPS = [
+  "Pedido",
+  "Asignado",
+  "Retiro",
+  "Origen",
+  "En viaje",
+  "Entrega",
+];
+
+function normalizeText(value, fallback = "") {
+  const normalized = String(value ?? "").trim();
+  return normalized || fallback;
+}
+
+function normalizeStatus(value) {
+  return normalizeText(value).toLowerCase();
+}
+
+function getPedidoId(pedido) {
+  return normalizeText(pedido?.orderId || pedido?._docId || pedido?.id);
+}
+
+function getAssignedDriver(pedido) {
+  return pedido?.assignment?.assignedDriver || null;
+}
+
+function getAssignedDriverId(pedido) {
+  return normalizeText(
+    pedido?.assignedDriverId || pedido?.assignment?.assignedDriverId
+  );
+}
+
+function getDriverName(driver) {
+  if (!driver) return "Repartidor asignado";
 
   return (
-    [cadete.nombre, cadete.apellido].filter(Boolean).join(" ") ||
-    cadete.alias ||
-    cadete.id ||
-    cadete.cadeteId ||
+    normalizeText(driver.fullName) ||
+    [driver.firstName, driver.lastName]
+      .map((item) => normalizeText(item))
+      .filter(Boolean)
+      .join(" ") ||
+    normalizeText(driver.driverId) ||
     "Repartidor asignado"
   );
 }
 
-function getCadeteBadge(cadete) {
-  const tipo = String(
-    cadete?.tipoListado ||
-      cadete?.tipoRepartidor ||
-      cadete?.modoIngresoOperativo ||
-      ""
-  ).toLowerCase();
+function getDriverMobility(driver) {
+  return normalizeText(driver?.mobility, "Movilidad no informada");
+}
 
-  if (tipo.includes("online")) return "Online";
-  if (tipo.includes("local")) return "Local";
-  if (tipo.includes("hibrido")) return "Híbrido";
+function getDriverBranch(driver) {
+  const branch = normalizeText(driver?.branch);
+  return branch ? ` · ${branch}` : "";
+}
+
+function getDriverBadge(driver) {
+  if (driver?.usesApp === true) return "Online";
+
+  const listType = normalizeText(driver?.listType).toLowerCase();
+
+  if (listType === "online") return "Online";
+  if (listType === "local") return "Local";
+  if (listType === "hybrid") return "Híbrido";
 
   return "Asignado";
 }
 
+function getDeliveryStep(pedido) {
+  return normalizeStatus(pedido?.delivery?.currentStep || "go_to_pickup");
+}
+
+function getDeliveryStatus(pedido) {
+  return normalizeStatus(pedido?.delivery?.operationalStatus || "");
+}
+
+function isDelivered(pedido) {
+  const status = normalizeStatus(pedido?.status);
+  const step = getDeliveryStep(pedido);
+  const operationalStatus = getDeliveryStatus(pedido);
+
+  return (
+    status === "completed" ||
+    step === "delivered" ||
+    operationalStatus === "delivered"
+  );
+}
+
+function isCancelled(pedido) {
+  return normalizeStatus(pedido?.status) === "cancelled";
+}
+
 function getRatingType(score) {
   const value = Number(score || 0);
-
-  if (value <= 2) return "negative";
-
-  return "positive";
+  return value <= 2 ? "negative" : "positive";
 }
 
 function getPedidoTrackingState(pedido) {
@@ -52,7 +113,18 @@ function getPedidoTrackingState(pedido) {
     };
   }
 
-  if (pedido.status === "finalizado" || pedido.currentStep === "delivered") {
+  if (isCancelled(pedido)) {
+    return {
+      key: "cancelled",
+      title: "Pedido cancelado",
+      text: "Este pedido fue cancelado.",
+      label: "Cancelado",
+      progress: 0,
+      activeIndex: 0,
+    };
+  }
+
+  if (isDelivered(pedido)) {
     return {
       key: "delivered",
       title: "Pedido entregado",
@@ -63,7 +135,11 @@ function getPedidoTrackingState(pedido) {
     };
   }
 
-  const step = pedido.currentStep || pedido.statusOperativo || "";
+  const status = normalizeStatus(pedido?.status);
+  const assignmentStatus = normalizeStatus(pedido?.assignment?.status);
+  const serverStatus = normalizeStatus(pedido?.server?.status);
+  const step = getDeliveryStep(pedido);
+  const operationalStatus = getDeliveryStatus(pedido);
 
   if (step === "go_to_pickup") {
     return {
@@ -76,7 +152,7 @@ function getPedidoTrackingState(pedido) {
     };
   }
 
-  if (step === "started_pickup") {
+  if (step === "started_pickup" || operationalStatus === "started_pickup") {
     return {
       key: "started_pickup",
       title: "Va al punto de retiro",
@@ -87,7 +163,7 @@ function getPedidoTrackingState(pedido) {
     };
   }
 
-  if (step === "arrived_pickup") {
+  if (step === "arrived_pickup" || operationalStatus === "arrived_pickup") {
     return {
       key: "arrived_pickup",
       title: "Llegó al punto de retiro",
@@ -98,7 +174,7 @@ function getPedidoTrackingState(pedido) {
     };
   }
 
-  if (step === "go_to_dropoff" || pedido.statusOperativo === "picked_up") {
+  if (step === "go_to_dropoff" || operationalStatus === "picked_up") {
     return {
       key: "go_to_dropoff",
       title: "Pedido retirado",
@@ -109,7 +185,7 @@ function getPedidoTrackingState(pedido) {
     };
   }
 
-  if (step === "arrived_dropoff") {
+  if (step === "arrived_dropoff" || operationalStatus === "arrived_dropoff") {
     return {
       key: "arrived_dropoff",
       title: "Llegó al destino",
@@ -121,9 +197,9 @@ function getPedidoTrackingState(pedido) {
   }
 
   if (
-    pedido.status === "asignado" ||
-    pedido.assignmentStatus === "assigned" ||
-    pedido.serverStatus === "matched"
+    status === "assigned" ||
+    assignmentStatus === "assigned" ||
+    serverStatus === "matched"
   ) {
     return {
       key: "assigned",
@@ -145,11 +221,6 @@ function getPedidoTrackingState(pedido) {
   };
 }
 
-function getAddress(value, fallback) {
-  const text = String(value || "").trim();
-  return text || fallback;
-}
-
 function formatMoney(value) {
   const num = Number(value || 0);
 
@@ -158,18 +229,28 @@ function formatMoney(value) {
   return `$${num.toLocaleString("es-AR")}`;
 }
 
-function getPedidoId(pedido) {
-  return pedido?._docId || pedido?.id || pedido?.orderId || "";
+function getPickupAddress(pedido) {
+  return normalizeText(pedido?.pickup?.address, "Origen no informado");
 }
 
-const STEPS = [
-  "Pedido",
-  "Asignado",
-  "Retiro",
-  "Origen",
-  "En viaje",
-  "Entrega",
-];
+function getDropoffAddress(pedido) {
+  return normalizeText(pedido?.dropoff?.address, "Destino no informado");
+}
+
+function getPrice(pedido) {
+  return pedido?.pricing?.price ?? pedido?.payment?.amount ?? null;
+}
+
+function getPaymentLabel(pedido) {
+  const method = normalizeText(pedido?.payment?.method);
+  const provider = normalizeText(pedido?.payment?.provider);
+
+  if (method === "cash") return "Efectivo";
+  if (method === "digital" && provider === "mercadopago") return "MercadoPago";
+  if (method === "digital") return "Digital";
+
+  return normalizeText(pedido?.payment?.label, "No informado");
+}
 
 export default function TrackingPedido({ pedido }) {
   const navigate = useNavigate();
@@ -179,30 +260,21 @@ export default function TrackingPedido({ pedido }) {
   const [savingRating, setSavingRating] = useState(false);
   const [ratingError, setRatingError] = useState("");
 
-  const cadete = pedido?.assignedCadete || null;
-  const nombreCadete = getCadeteNombre(cadete);
+  const driver = getAssignedDriver(pedido);
+  const driverId = getAssignedDriverId(pedido);
+  const driverName = getDriverName(driver);
   const tracking = getPedidoTrackingState(pedido);
 
-  const isDelivered =
-    pedido?.status === "finalizado" || pedido?.currentStep === "delivered";
+  const delivered = isDelivered(pedido);
 
-  const tieneUbicacion =
-    typeof cadete?.lat === "number" && typeof cadete?.lng === "number";
+  const origin = getPickupAddress(pedido);
+  const destination = getDropoffAddress(pedido);
 
-  const origin = getAddress(
-    pedido?.originInput || pedido?.origin || pedido?.pickup?.address,
-    "Origen no informado"
-  );
-
-  const destination = getAddress(
-    pedido?.destinationInput || pedido?.destination || pedido?.dropoff?.address,
-    "Destino no informado"
-  );
-
-  const precio = formatMoney(pedido?.price || pedido?.breakdown?.total);
-  const movilidad = cadete?.movilidad || "Movilidad no informada";
-  const sucursal = cadete?.sucursal ? ` · ${cadete.sucursal}` : "";
-  const badge = getCadeteBadge(cadete);
+  const precio = formatMoney(getPrice(pedido));
+  const movilidad = getDriverMobility(driver);
+  const sucursal = getDriverBranch(driver);
+  const badge = getDriverBadge(driver);
+  const paymentLabel = getPaymentLabel(pedido);
 
   const selectedRating = hoverRating || rating;
 
@@ -238,17 +310,18 @@ export default function TrackingPedido({ pedido }) {
 
     try {
       await updateDoc(doc(db, "orders", pedidoId), {
-        rating: {
-          score: rating,
-          type: ratingType,
-          cadeteId: cadete?.cadeteId || pedido?.assignedCadeteId || null,
-          cadeteNombre: nombreCadete,
-          ratedAt: serverTimestamp(),
-          source: "customer_app",
-        },
+        "rating.value": rating,
+        "rating.score": rating,
+        "rating.type": ratingType,
+        "rating.driverId": driverId || null,
+        "rating.driverName": driverName,
+        "rating.ratedAt": serverTimestamp(),
+        "rating.source": "customer_app",
+
         customerRated: true,
         customerRatedAt: serverTimestamp(),
-        lastUpdate: serverTimestamp(),
+
+        updatedAt: serverTimestamp(),
       });
 
       localStorage.removeItem("NuevoPedido");
@@ -262,7 +335,7 @@ export default function TrackingPedido({ pedido }) {
     }
   };
 
-  if (isDelivered) {
+  if (delivered) {
     return (
       <div className={styles.ratingScreen}>
         <section className={styles.ratingCard}>
@@ -279,11 +352,11 @@ export default function TrackingPedido({ pedido }) {
 
           <div className={styles.ratingCadeteCard}>
             <div className={styles.avatar}>
-              {nombreCadete.charAt(0).toUpperCase()}
+              {driverName.charAt(0).toUpperCase()}
             </div>
 
             <div>
-              <strong>{nombreCadete}</strong>
+              <strong>{driverName}</strong>
               <span>
                 {movilidad}
                 {sucursal}
@@ -319,9 +392,7 @@ export default function TrackingPedido({ pedido }) {
           <div className={styles.ratingText}>{ratingText}</div>
 
           {ratingError && (
-            <div className={styles.ratingError}>
-              {ratingError}
-            </div>
+            <div className={styles.ratingError}>{ratingError}</div>
           )}
 
           <button
@@ -359,15 +430,17 @@ export default function TrackingPedido({ pedido }) {
             <span>Destino</span>
           </div>
 
-          <div className={`${styles.cadeteMarker} ${styles[`cadete_${tracking.key}`] || ""}`}>
+          <div
+            className={`${styles.cadeteMarker} ${
+              styles[`cadete_${tracking.key}`] || ""
+            }`}
+          >
             <span className={styles.cadetePulse} />
-            <strong>{cadete?.movilidad || "Cadete"}</strong>
+            <strong>{movilidad || "Repartidor"}</strong>
           </div>
 
           <div className={styles.mapNotice}>
-            {tieneUbicacion
-              ? "Ubicación inicial del repartidor"
-              : "Vista previa del recorrido"}
+            Seguimiento operativo del pedido
           </div>
         </div>
       </section>
@@ -411,11 +484,11 @@ export default function TrackingPedido({ pedido }) {
 
         <div className={styles.cadeteCard}>
           <div className={styles.avatar}>
-            {nombreCadete.charAt(0).toUpperCase()}
+            {driverName.charAt(0).toUpperCase()}
           </div>
 
           <div className={styles.cadeteInfo}>
-            <h2>{nombreCadete}</h2>
+            <h2>{driverName}</h2>
             <p>
               {movilidad}
               {sucursal}
@@ -433,9 +506,7 @@ export default function TrackingPedido({ pedido }) {
 
           <div>
             <span>Pago</span>
-            <strong>
-              {pedido?.paymentMethod === "digital" ? "Digital" : "Efectivo"}
-            </strong>
+            <strong>{paymentLabel}</strong>
           </div>
         </div>
 
