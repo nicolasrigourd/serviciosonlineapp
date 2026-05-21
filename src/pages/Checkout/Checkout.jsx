@@ -1,6 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { doc, onSnapshot, updateDoc, serverTimestamp } from "firebase/firestore";
+import {
+  doc,
+  onSnapshot,
+  updateDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 
 import { useFlow } from "../../state/FlowContext";
 import styles from "./Checkout.module.css";
@@ -13,50 +18,41 @@ function norm(value) {
 }
 
 function getOrderId(pedido) {
-  return String(pedido?.orderId || pedido?.id || pedido?._docId || "").trim();
+  return String(pedido?.orderId || pedido?._docId || "").trim();
 }
 
 function getServerStatus(pedido) {
-  return norm(pedido?.server?.status || pedido?.serverStatus);
+  return norm(pedido?.server?.status);
 }
 
 function getAssignmentStatus(pedido) {
-  return norm(pedido?.assignment?.status || pedido?.assignmentStatus);
+  return norm(pedido?.assignment?.status);
 }
 
 function getOrderStatus(pedido) {
-  const status = norm(pedido?.status);
+  return norm(pedido?.status);
+}
 
-  if (status === "pendiente") return "pending";
-  if (status === "ofertando") return "offering";
-  if (status === "asignado") return "assigned";
-  if (status === "finalizado") return "completed";
-  if (status === "cancelado") return "cancelled";
-
-  return status;
+function getOfferStatus(pedido) {
+  return norm(pedido?.offer?.status);
 }
 
 function getDeliveryStep(pedido) {
-  return norm(
-    pedido?.delivery?.currentStep ||
-      pedido?.currentStep ||
-      pedido?.statusOperativo ||
-      ""
-  );
+  return norm(pedido?.delivery?.currentStep || "");
 }
 
 function getDeliveryStatus(pedido) {
-  return norm(pedido?.delivery?.operationalStatus || pedido?.statusOperativo || "");
+  return norm(pedido?.delivery?.operationalStatus || "");
 }
 
+/*
+  IMPORTANTE:
+  offer.driver NO es repartidor asignado.
+  offer.driver es solo el candidato/oferta enviada.
+  El repartidor real asignado vive en assignment.assignedDriver.
+*/
 function getAssignedDriver(pedido) {
-  return (
-    pedido?.assignment?.assignedDriver ||
-    pedido?.offer?.driver ||
-    pedido?.assignedDriver ||
-    pedido?.assignedCadete ||
-    null
-  );
+  return pedido?.assignment?.assignedDriver || null;
 }
 
 function hasAssignedDriver(pedido) {
@@ -69,9 +65,7 @@ function hasAssignedDriver(pedido) {
       assignmentStatus === "assigned" ||
       serverStatus === "matched" ||
       pedido?.assignedDriverId ||
-      pedido?.assignedCadeteId ||
-      pedido?.assignment?.assignedDriverId ||
-      getAssignedDriver(pedido)
+      pedido?.assignment?.assignedDriverId
   );
 }
 
@@ -111,8 +105,10 @@ function getCheckoutWaitingState(pedido) {
   const status = getOrderStatus(pedido);
   const serverStatus = getServerStatus(pedido);
   const assignmentStatus = getAssignmentStatus(pedido);
+  const offerStatus = getOfferStatus(pedido);
   const deliveryStep = getDeliveryStep(pedido);
   const deliveryStatus = getDeliveryStatus(pedido);
+  const assignmentManager = norm(pedido?.assignment?.manager);
 
   if (isCancelled(pedido)) {
     return {
@@ -144,11 +140,7 @@ function getCheckoutWaitingState(pedido) {
     };
   }
 
-  if (
-    assignmentStatus === "fallback_to_local" ||
-    serverStatus === "fallback_local" ||
-    pedido?.assignment?.manager === "engine"
-  ) {
+  if (serverStatus === "fallback_local" || assignmentManager === "engine") {
     return {
       title: "Lo gestiona la central",
       headline: "Tu pedido no queda sin atención",
@@ -190,7 +182,7 @@ function getCheckoutWaitingState(pedido) {
     status === "offering" ||
     serverStatus === "waiting_driver_response" ||
     assignmentStatus === "offering" ||
-    pedido?.offer?.status === "pending"
+    offerStatus === "pending"
   ) {
     return {
       title: "Un repartidor está revisando tu pedido",
@@ -215,10 +207,7 @@ function getCheckoutWaitingState(pedido) {
     assignmentStatus === "assigned" ||
     serverStatus === "matched"
   ) {
-    if (
-      deliveryStep === "started_pickup" ||
-      deliveryStatus === "started_pickup"
-    ) {
+    if (deliveryStep === "started_pickup" || deliveryStatus === "started_pickup") {
       return {
         title: "El repartidor va al origen",
         headline: "En camino al punto de retiro",
@@ -237,10 +226,7 @@ function getCheckoutWaitingState(pedido) {
       };
     }
 
-    if (
-      deliveryStep === "arrived_pickup" ||
-      deliveryStatus === "arrived_pickup"
-    ) {
+    if (deliveryStep === "arrived_pickup" || deliveryStatus === "arrived_pickup") {
       return {
         title: "El repartidor llegó al origen",
         headline: "Retiro en proceso",
@@ -259,11 +245,7 @@ function getCheckoutWaitingState(pedido) {
       };
     }
 
-    if (
-      deliveryStep === "go_to_dropoff" ||
-      deliveryStatus === "picked_up" ||
-      deliveryStep === "picked_up"
-    ) {
+    if (deliveryStep === "go_to_dropoff" || deliveryStatus === "picked_up") {
       return {
         title: "Pedido retirado",
         headline: "El repartidor va hacia el destino",
@@ -379,7 +361,7 @@ function formatTimestamp(value) {
     }
   }
 
-  return value;
+  return null;
 }
 
 function formatMoney(value) {
@@ -391,6 +373,7 @@ function formatMoney(value) {
 function formatDistance(value) {
   const number = Number(value || 0);
   if (!number) return "—";
+
   return `${number.toLocaleString("es-AR", {
     maximumFractionDigits: 2,
   })} km`;
@@ -407,8 +390,6 @@ function getPickupAddress(pedido) {
   return (
     pedido?.pickup?.address ||
     pedido?.pickup?.input ||
-    pedido?.originInput ||
-    pedido?.origin ||
     "Punto de retiro no informado"
   );
 }
@@ -417,70 +398,43 @@ function getDropoffAddress(pedido) {
   return (
     pedido?.dropoff?.address ||
     pedido?.dropoff?.input ||
-    pedido?.destinationInput ||
-    pedido?.destination ||
     "Punto de entrega no informado"
   );
 }
 
 function getPickupContact(pedido) {
-  return (
-    pedido?.pickup?.contact?.fullName ||
-    pedido?.pickup?.contactName ||
-    pedido?.sender?.name ||
-    pedido?.contactFromName ||
-    ""
-  );
+  return pedido?.pickup?.contact?.fullName || "";
 }
 
 function getDropoffContact(pedido) {
   return (
     pedido?.dropoff?.contact?.fullName ||
-    pedido?.dropoff?.contactName ||
     pedido?.recipient?.name ||
-    pedido?.recipientName ||
     ""
   );
 }
 
 function formatPayment(pedido) {
-  const method = pedido?.payment?.method || pedido?.paymentMethod;
-  const provider = pedido?.payment?.provider || pedido?.paymentProvider;
+  const method = pedido?.payment?.method;
+  const provider = pedido?.payment?.provider;
 
   if (method === "cash") return "Efectivo";
   if (method === "digital" && provider === "mercadopago") return "MercadoPago";
   if (method === "digital") return "Digital";
-  if (method === "mercadopago") return "MercadoPago";
 
-  return pedido?.payment?.label || pedido?.paymentLabel || "No informado";
+  return pedido?.payment?.label || "No informado";
 }
 
 function getPrice(pedido) {
-  return (
-    pedido?.pricing?.price ??
-    pedido?.payment?.amount ??
-    pedido?.price ??
-    pedido?.breakdown?.total ??
-    0
-  );
+  return pedido?.pricing?.price ?? pedido?.payment?.amount ?? 0;
 }
 
 function getDistanceKm(pedido) {
-  return (
-    pedido?.route?.distanceKm ??
-    pedido?.km ??
-    pedido?.breakdown?.km ??
-    0
-  );
+  return pedido?.route?.distanceKm ?? 0;
 }
 
 function getServiceLabel(pedido) {
-  return (
-    pedido?.service?.label ||
-    pedido?.service?.type ||
-    pedido?.serviceType ||
-    "Simple"
-  );
+  return pedido?.service?.label || pedido?.service?.type || "Simple";
 }
 
 function getDriverName(pedido) {
@@ -488,9 +442,7 @@ function getDriverName(pedido) {
 
   return (
     driver?.fullName ||
-    [driver?.firstName || driver?.nombre, driver?.lastName || driver?.apellido]
-      .filter(Boolean)
-      .join(" ") ||
+    [driver?.firstName, driver?.lastName].filter(Boolean).join(" ") ||
     "Repartidor asignado"
   );
 }
@@ -584,8 +536,22 @@ function StatusIllustration({ type }) {
         </svg>
       ) : type === "radar" ? (
         <svg viewBox="0 0 80 80" className={styles.illustrationSvg}>
-          <circle cx="40" cy="40" r="25" fill="none" stroke="currentColor" strokeWidth="4" />
-          <circle cx="40" cy="40" r="13" fill="none" stroke="currentColor" strokeWidth="4" />
+          <circle
+            cx="40"
+            cy="40"
+            r="25"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <circle
+            cx="40"
+            cy="40"
+            r="13"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
           <circle cx="40" cy="40" r="4" fill="currentColor" />
           <path
             d="M40 40l21-13"
@@ -658,16 +624,14 @@ export default function Checkout() {
 
         const pedidoActualizado = {
           ...data,
-
-          id: data.orderId || data.id || snapshot.id,
+          _docId: snapshot.id,
           orderId: data.orderId || snapshot.id,
 
           createdAt: formatTimestamp(data.createdAt),
           updatedAt: formatTimestamp(data.updatedAt),
-          lastUpdate: formatTimestamp(data.lastUpdate),
-          assignedAt: formatTimestamp(data.assignment?.assignedAt || data.assignedAt),
-          serverReviewAt: formatTimestamp(data.server?.reviewAt || data.serverReviewAt),
-          finishedAt: formatTimestamp(data.delivery?.finishedAt || data.finishedAt),
+          assignedAt: formatTimestamp(data.assignment?.assignedAt),
+          serverReviewAt: formatTimestamp(data.server?.reviewAt),
+          finishedAt: formatTimestamp(data.delivery?.finishedAt),
         };
 
         setPedido((prev) => {
@@ -721,11 +685,10 @@ export default function Checkout() {
         await updateDoc(doc(db, "orders", id), {
           status: "cancelled",
           updatedAt: serverTimestamp(),
+          updatedAtMs: Date.now(),
           "cancellation.cancelledAt": serverTimestamp(),
+          "cancellation.cancelledAtMs": Date.now(),
           "cancellation.reason": "customer_cancelled_from_checkout",
-
-          // Compatibilidad temporal.
-          lastUpdate: serverTimestamp(),
         });
       }
     } catch (error) {
@@ -907,7 +870,6 @@ export default function Checkout() {
               <span>Gestión</span>
               <strong>
                 {pedido?.assignment?.manager === "engine" ||
-                pedido?.assignmentManager === "engine" ||
                 getServerStatus(pedido) === "fallback_local"
                   ? "Central"
                   : "Online"}
@@ -923,29 +885,23 @@ export default function Checkout() {
       </main>
 
       <footer className={styles.footer}>
-        {!hasAssignedDriver(pedido) && !isCompleted(pedido) && !isCancelled(pedido) && (
-          <button
-            className={styles.secondaryBtn}
-            type="button"
-            onClick={handleCancelar}
-          >
-            Cancelar
-          </button>
-        )}
+        {!hasAssignedDriver(pedido) &&
+          !isCompleted(pedido) &&
+          !isCancelled(pedido) && (
+            <button
+              className={styles.secondaryBtn}
+              type="button"
+              onClick={handleCancelar}
+            >
+              Cancelar
+            </button>
+          )}
 
-        <button
-          className={styles.ghostBtn}
-          type="button"
-          onClick={handlePedidos}
-        >
+        <button className={styles.ghostBtn} type="button" onClick={handlePedidos}>
           Mis pedidos
         </button>
 
-        <button
-          className={styles.primaryBtn}
-          type="button"
-          onClick={handleInicio}
-        >
+        <button className={styles.primaryBtn} type="button" onClick={handleInicio}>
           Ir al inicio
         </button>
       </footer>
@@ -954,14 +910,28 @@ export default function Checkout() {
 }
 
 const pinIcon = (
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg
+    viewBox="0 0 24 24"
+    width="18"
+    height="18"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
     <path d="M12 21s-6-4.35-6-10a6 6 0 1 1 12 0c0 5.65-6 10-6 10z" />
     <circle cx="12" cy="11" r="2.5" />
   </svg>
 );
 
 const targetIcon = (
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg
+    viewBox="0 0 24 24"
+    width="18"
+    height="18"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
     <circle cx="12" cy="12" r="9" />
     <circle cx="12" cy="12" r="3" />
     <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
@@ -969,7 +939,14 @@ const targetIcon = (
 );
 
 const paymentIcon = (
-  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg
+    viewBox="0 0 24 24"
+    width="17"
+    height="17"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
     <rect x="3" y="6" width="18" height="12" rx="2.5" />
     <path d="M7 10h.01M17 14h.01" />
     <circle cx="12" cy="12" r="2.2" />
@@ -977,21 +954,42 @@ const paymentIcon = (
 );
 
 const sparkIcon = (
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg
+    viewBox="0 0 24 24"
+    width="18"
+    height="18"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
     <path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2z" />
     <path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16z" />
   </svg>
 );
 
 const driverMiniIcon = (
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg
+    viewBox="0 0 24 24"
+    width="18"
+    height="18"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
     <circle cx="12" cy="7" r="4" />
     <path d="M5 21a7 7 0 0 1 14 0" />
   </svg>
 );
 
 const boxIcon = (
-  <svg viewBox="0 0 80 80" width="54" height="54" fill="none" stroke="currentColor" strokeWidth="5">
+  <svg
+    viewBox="0 0 80 80"
+    width="54"
+    height="54"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="5"
+  >
     <path d="M18 28l22-12 22 12v25L40 65 18 53V28z" />
     <path d="M18 28l22 13 22-13M40 41v24" />
   </svg>
