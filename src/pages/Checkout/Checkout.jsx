@@ -600,6 +600,7 @@ export default function Checkout() {
 
   const [pedido, setPedido] = useState(null);
   const [msgIdx, setMsgIdx] = useState(0);
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   // Carga inicial desde Dexie por orderId en URL
   useEffect(() => {
@@ -670,11 +671,11 @@ export default function Checkout() {
 
   const tieneRepartidorAsignado = hasAssignedDriver(pedido);
 
-  const handleCancelar = async () => {
-    if (!confirm("¿Seguro que querés cancelar este pedido?")) return;
+  const handleCancelar = () => setConfirmCancel(true);
 
+  const confirmCancelOrder = async () => {
+    setConfirmCancel(false);
     const id = getOrderId(pedido);
-
     try {
       if (id) {
         await updateDoc(doc(db, "orders", id), {
@@ -690,7 +691,6 @@ export default function Checkout() {
     } catch (error) {
       console.error("[CHECKOUT][CANCEL] Error cancelando pedido:", error);
     }
-
     reset?.();
     navigate("/orders", { replace: true });
   };
@@ -900,9 +900,38 @@ export default function Checkout() {
           Ir al inicio
         </button>
       </footer>
+
+      {confirmCancel && (
+        <div className={styles.confirmOverlay} onClick={() => setConfirmCancel(false)}>
+          <div className={styles.confirmBox} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.confirmIconWrap}>{alertIcon}</div>
+            <h3 className={styles.confirmTitle}>¿Cancelar el pedido?</h3>
+            <p className={styles.confirmText}>
+              El pedido dejará de estar activo y no se podrá recuperar.
+            </p>
+            <div className={styles.confirmActions}>
+              <button type="button" className={styles.confirmKeep} onClick={() => setConfirmCancel(false)}>
+                Mantener
+              </button>
+              <button type="button" className={styles.confirmDanger} onClick={confirmCancelOrder}>
+                Cancelar pedido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+const alertIcon = (
+  <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+    <line x1="12" y1="9" x2="12" y2="13" />
+    <line x1="12" y1="17" x2="12.01" y2="17" />
+  </svg>
+);
 
 const pinIcon = (
   <svg

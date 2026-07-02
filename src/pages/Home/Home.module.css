@@ -266,7 +266,11 @@
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 0 16px calc(86px + env(safe-area-inset-bottom));
+  /*
+    58px BottomNav + 8px gap + 76px ActiveOrdersSheet peek + 22px buffer = 164px.
+    Applied always so scroll works regardless of sheet visibility.
+  */
+  padding: 0 16px calc(164px + env(safe-area-inset-bottom));
 }
 
 .homeLayout {
@@ -498,7 +502,12 @@
     margin-bottom: 12px;
   }
 
-  .homeContent { padding-left: 12px; padding-right: 12px; }
+  .homeContent {
+    padding-left: 12px;
+    padding-right: 12px;
+    /* En pantallas chicas el dock también es más chico */
+    padding-bottom: calc(158px + env(safe-area-inset-bottom));
+  }
 
   .servicesPanel { border-radius: 22px; padding: 13px 11px 12px; }
 

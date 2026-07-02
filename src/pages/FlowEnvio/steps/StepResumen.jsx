@@ -97,6 +97,7 @@ export default function StepResumen({ onConfirm }) {
 
       // Adelanto en origen
       const requiresMoney = pickupAmt > 0;
+      const isDigital    = method === "mercadopago";
 
       // Usuario creador
       const createdByUser = [user?.nombre, user?.apellido].filter(Boolean).join(" ")
@@ -109,12 +110,13 @@ export default function StepResumen({ onConfirm }) {
         orderType:         "online",
         status:            "pending",
         assignmentScope:   "online",
-        assignmentManager: "engine",
+        assignmentManager: "server",
         assignmentStatus:  "unassigned",
         assignedDriverId:  null,
 
         createdFrom:    "customer_app",
         createdByUser,
+        customerUid:    user?.uid || null,
 
         createdAt:   serverTimestamp(),
         createdAtMs: nowMs,
@@ -137,7 +139,7 @@ export default function StepResumen({ onConfirm }) {
 
         assignment: {
           scope:            "online",
-          manager:          "engine",
+          manager:          "server",
           status:           "unassigned",
           mode:             null,
           source:           null,
@@ -235,7 +237,7 @@ export default function StepResumen({ onConfirm }) {
         },
 
         driverRequirements: {
-          requiresCashHandling: requiresMoney,
+          requiresCashHandling: isCompras ? true : requiresMoney,
           allowedMobilities:    [],
           requiresApp:          true,
           minimumLevel:         1,
@@ -264,10 +266,11 @@ export default function StepResumen({ onConfirm }) {
 
         payment: {
           serviceChargedTo:     chargedTo,
-          method,
+          method:               isDigital ? "digital" : method,
+          provider:             isDigital ? "mercadopago" : null,
           label:                METHOD_LABELS[method] || "",
           status:               "pending",
-          requiresCashHandling: isCompras ? true : requiresMoney,
+          requiresCashHandling: isDigital ? false : (isCompras ? true : requiresMoney),
           requiresMoney:        isCompras ? true : requiresMoney,
           requiredMoneyAmount:  isCompras ? shoppingBudget : pickupAmt,
           transportsCash:       false,

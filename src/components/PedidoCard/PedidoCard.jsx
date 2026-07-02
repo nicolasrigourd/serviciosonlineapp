@@ -20,20 +20,16 @@ export default function PedidoCard({
 }) {
   const fecha = useMemo(() => {
     try {
-      if (!pedido?.createdAt) return "—";
-
-      const d = new Date(pedido.createdAt);
-
-      if (Number.isNaN(d.getTime())) return "—";
-
-      return d.toLocaleString("es-AR", {
+      const ms = pedido?.createdAtMs || (pedido?.createdAt ? new Date(pedido.createdAt).getTime() : 0);
+      if (!ms || Number.isNaN(ms)) return "—";
+      return new Date(ms).toLocaleString("es-AR", {
         dateStyle: "short",
         timeStyle: "short",
       });
     } catch {
       return "—";
     }
-  }, [pedido?.createdAt]);
+  }, [pedido?.createdAtMs, pedido?.createdAt]);
 
   const price = Number(pedido?.price || pedido?.breakdown?.total || 0);
   const km = Number(pedido?.km || pedido?.breakdown?.km || 0);
@@ -42,7 +38,8 @@ export default function PedidoCard({
   const estadoInfo = getEstadoInfo(estado);
 
   const serviceType = formatServiceType(pedido?.serviceType || pedido?.service || "");
-  const shortId = getShortId(pedido?.id);
+  const pid = pedido?.orderId || pedido?.id;
+  const shortId = getShortId(pid);
 
   const canCancel = ["pendiente", "buscando", "ofertando", "ofertado"].includes(
     estado
@@ -64,7 +61,7 @@ export default function PedidoCard({
   return (
     <article
       className={`${styles.card} ${isCurrent ? styles.cardCurrent : ""}`}
-      aria-label={`Pedido ${pedido?.id || ""}`}
+      aria-label={`Pedido ${pid || ""}`}
     >
       <header className={styles.head}>
         <div className={styles.statusGroup}>
@@ -127,7 +124,7 @@ export default function PedidoCard({
             <button
               className={styles.btnGhost}
               type="button"
-              onClick={() => onCancelar?.(pedido.id)}
+              onClick={() => onCancelar?.(pid)}
               aria-label="Cancelar pedido"
             >
               Cancelar
@@ -148,7 +145,7 @@ export default function PedidoCard({
           <button
             className={styles.btnPrimary}
             type="button"
-            onClick={() => onVer?.(pedido.id)}
+            onClick={() => onVer?.(pid)}
             aria-label="Ver detalle"
           >
             Ver
@@ -158,7 +155,7 @@ export default function PedidoCard({
             <button
               className={styles.btnDanger}
               type="button"
-              onClick={() => onEliminar?.(pedido.id)}
+              onClick={() => onEliminar?.(pid)}
               aria-label="Eliminar del historial"
             >
               Eliminar

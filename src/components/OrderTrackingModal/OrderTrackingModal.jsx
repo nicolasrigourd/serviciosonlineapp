@@ -66,10 +66,21 @@ function getNextWaypointLabel(order) {
     : "al origen";
 }
 
-function getDriverName(order) {
+function getDriverInfo(order) {
   const d = order?.assignment?.assignedDriver;
-  if (!d) return "Repartidor";
-  return [d.firstName, d.lastName].filter(Boolean).join(" ") || d.fullName || "Repartidor";
+  if (!d) return null;
+  const name = [d.firstName, d.lastName].filter(Boolean).join(" ") || d.fullName || "";
+  if (!name) return null;
+  return {
+    name,
+    vehicle: d?.mobility || d?.movilidad || "",
+    plate:   d?.vehiclePlate || d?.vehicle?.plate || "",
+    initial: name.charAt(0).toUpperCase(),
+  };
+}
+
+function getDriverName(order) {
+  return getDriverInfo(order)?.name || "Repartidor";
 }
 
 function getDriverVehicle(order) {
@@ -128,7 +139,7 @@ const DARK_MAP_STYLE = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function OrderTrackingModal({ orderId, onClose }) {
+export default function OrderTrackingModal({ orderId, initialOrder = null, onClose }) {
   const mapDivRef      = useRef(null);
   const mapRef         = useRef(null);
   const driverMarkerRef= useRef(null);
@@ -137,7 +148,7 @@ export default function OrderTrackingModal({ orderId, onClose }) {
   const routeLineRef   = useRef(null);
   const etaThrottleRef = useRef(null);
 
-  const [order,       setOrder]       = useState(null);
+  const [order,       setOrder]       = useState(initialOrder);
   const [driverLoc,   setDriverLoc]   = useState(null);
   const [etaMinutes,  setEtaMinutes]  = useState(null);
   const [panelMode,   setPanelMode]   = useState("compact"); // compact | expanded
@@ -336,8 +347,10 @@ export default function OrderTrackingModal({ orderId, onClose }) {
     dragRef.current.dragging = false;
   };
 
-  const driverName    = order ? getDriverName(order) : "—";
-  const driverVehicle = order ? getDriverVehicle(order) : "";
+  const driverInfo    = order ? getDriverInfo(order) : null;
+  const driverName    = driverInfo?.name    || (order ? "—" : "Cargando…");
+  const driverVehicle = driverInfo?.vehicle || "";
+  const driverPlate   = driverInfo?.plate   || "";
   const statusText    = order ? getStatusText(order) : "Cargando…";
   const stepIndex     = order ? getCurrentStepIndex(order) : 0;
   const waypointLabel = order ? getNextWaypointLabel(order) : "";
@@ -382,7 +395,11 @@ export default function OrderTrackingModal({ orderId, onClose }) {
             <div className={styles.avatar}>{driverName.charAt(0).toUpperCase()}</div>
             <div>
               <strong className={styles.driverName}>{driverName}</strong>
-              {driverVehicle && <span className={styles.vehicle}>{driverVehicle}</span>}
+              {(driverVehicle || driverPlate) && (
+                <span className={styles.vehicle}>
+                  {driverVehicle}{driverPlate ? ` · ${driverPlate}` : ""}
+                </span>
+              )}
             </div>
           </div>
 

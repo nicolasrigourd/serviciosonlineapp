@@ -1,78 +1,89 @@
+/* ── Base card ───────────────────────────────────────────────────
+   Lifted from background with shadow + neutral border.
+   No colored borders — hierarchy comes from depth and text weight.
+──────────────────────────────────────────────────────────────── */
+
 .card {
   position: relative;
   width: 100%;
-  display: grid;
-  gap: 12px;
-  padding: 14px;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid rgba(226, 232, 240, 0.95);
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid rgba(17, 24, 39, 0.08);
   box-shadow:
-    0 12px 28px rgba(15, 23, 42, 0.07),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    0 1px 2px rgba(17, 24, 39, 0.05),
+    0 4px 12px rgba(17, 24, 39, 0.08),
+    0 10px 24px rgba(17, 24, 39, 0.06);
   box-sizing: border-box;
-  overflow: hidden;
-  transition:
-    transform 0.14s ease,
-    box-shadow 0.18s ease,
-    border-color 0.18s ease;
+  display: grid;
+  gap: 14px;
+  transition: box-shadow 0.18s ease;
 }
 
-.card::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 5px;
-  border-radius: 24px 0 0 24px;
-  background: #cbd5e1;
+/* Dark mode: explicit lift — surface is barely different from bg by default */
+[data-theme="dark"] .card {
+  background: #1C2333;
+  border-color: rgba(255, 255, 255, 0.09);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.6),
+    0 4px 12px rgba(0, 0, 0, 0.5),
+    0 10px 28px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
-.card:active {
-  transform: scale(0.992);
-}
-
+/* isCurrent: more prominent elevation, still no colored border */
 .isCurrent {
-  border-color: rgba(22, 163, 74, 0.24);
-  background:
-    radial-gradient(circle at top left, rgba(34, 197, 94, 0.1), transparent 34%),
-    rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 2px 4px rgba(17, 24, 39, 0.07),
+    0 6px 18px rgba(17, 24, 39, 0.10),
+    0 16px 36px rgba(17, 24, 39, 0.09);
 }
 
-.isCurrent::before {
-  background: linear-gradient(180deg, #57d70a 0%, #16a34a 100%);
+[data-theme="dark"] .isCurrent {
+  background: #1E2A3A;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.65),
+    0 6px 18px rgba(0, 0, 0, 0.55),
+    0 16px 36px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
 }
 
-.isOther::before {
-  background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
-}
+/* ── Contenido principal ─────────────────────────────────────── */
 
 .cardMain {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-columns: 40px minmax(0, 1fr);
   gap: 12px;
   align-items: start;
 }
 
 .iconBox {
-  width: 44px;
-  height: 44px;
-  border-radius: 17px;
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
   display: grid;
   place-items: center;
-  color: #15803d;
-  background: #dcfce7;
-  flex: 0 0 auto;
+  background: rgba(17, 24, 39, 0.06);
+  color: #475569;
+  flex-shrink: 0;
 }
 
-.isOther .iconBox {
-  color: #334155;
-  background: #f1f5f9;
+[data-theme="dark"] .iconBox {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(240, 246, 252, 0.55);
+}
+
+/* El ícono de la dirección actual tiene acento verde — única excepción de color */
+.isCurrent .iconBox {
+  background: var(--accent-bg);
+  color: var(--accent-text);
 }
 
 .content {
   min-width: 0;
   display: grid;
-  gap: 7px;
+  gap: 4px;
 }
 
 .head {
@@ -82,91 +93,111 @@
 .titleRow {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   min-width: 0;
   flex-wrap: wrap;
 }
 
 .title {
   margin: 0;
-  color: #0f172a;
-  font-size: 1rem;
-  line-height: 1.1;
-  font-weight: 950;
-  letter-spacing: -0.025em;
+  color: var(--text);
+  font-size: 0.97rem;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.03em;
   min-width: 0;
-  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ── Badges ──────────────────────────────────────────────────── */
 
 .badge,
 .quickBadge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 23px;
-  padding: 0 9px;
+  min-height: 20px;
+  padding: 0 7px;
   border-radius: 999px;
-  font-size: 0.68rem;
-  line-height: 1;
+  font-size: 0.62rem;
   font-weight: 950;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+  flex-shrink: 0;
 }
 
+/* "Actual" — único color que se mantiene: comunica estado, no decoración */
 .badge {
-  background: #dcfce7;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
+  background: var(--accent-bg);
+  color: var(--accent-text);
 }
 
 .quickBadge {
-  background: #fef3c7;
-  color: #b45309;
-  border: 1px solid #fde68a;
+  background: rgba(17, 24, 39, 0.06);
+  color: #64748b;
 }
+
+[data-theme="dark"] .quickBadge {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(240, 246, 252, 0.55);
+}
+
+/* ── Dirección ───────────────────────────────────────────────── */
 
 .body {
   display: grid;
-  gap: 4px;
+  gap: 2px;
   min-width: 0;
 }
 
 .address {
   margin: 0;
-  color: #334155;
-  font-size: 0.9rem;
-  line-height: 1.28;
-  font-weight: 750;
+  color: #475569;
+  font-size: 0.86rem;
+  line-height: 1.32;
+  font-weight: 500;
+}
+
+/* En dark mode el muted estándar es casi invisible — subimos la opacidad */
+[data-theme="dark"] .address {
+  color: rgba(240, 246, 252, 0.72);
 }
 
 .subtitle {
   margin: 0;
-  color: #64748b;
-  font-size: 0.8rem;
+  color: #94a3b8;
+  font-size: 0.78rem;
   line-height: 1.25;
-  font-weight: 650;
+  font-weight: 500;
 }
 
-/* ===============================
-   ACCIONES
-   =============================== */
+[data-theme="dark"] .subtitle {
+  color: rgba(240, 246, 252, 0.45);
+}
+
+/* ── Footer de acciones ──────────────────────────────────────── */
 
 .foot {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(17, 24, 39, 0.07);
+}
+
+[data-theme="dark"] .foot {
+  border-top-color: rgba(255, 255, 255, 0.07);
 }
 
 .leftActions,
 .rightActions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 }
 
@@ -175,59 +206,100 @@
   flex-wrap: wrap;
 }
 
+/* ── Botones ─────────────────────────────────────────────────── */
+
 .btnPrimary,
 .btnSelect,
 .btnGhost,
 .btnDanger,
 .iconBtn {
   border: none;
-  min-height: 38px;
-  border-radius: 14px;
-  font-size: 0.82rem;
-  font-weight: 900;
+  min-height: 34px;
+  border-radius: 11px;
+  font-size: 0.79rem;
+  font-weight: 850;
   cursor: pointer;
-  transition:
-    transform 0.06s ease,
-    filter 0.15s ease,
-    opacity 0.15s ease,
-    background 0.15s ease;
+  transition: opacity 0.1s ease, transform 0.06s ease;
 }
 
 .btnPrimary,
 .btnSelect,
 .btnGhost,
 .btnDanger {
-  padding: 0 12px;
+  padding: 0 11px;
 }
 
-.btnPrimary,
+/* "Usar como actual" — neutro oscuro en claro, neutro claro en oscuro */
 .btnSelect {
-  background: #111827;
-  color: #ffffff;
+  background: rgba(17, 24, 39, 0.08);
+  color: #1e293b;
+  border: 1px solid rgba(17, 24, 39, 0.10);
 }
 
+[data-theme="dark"] .btnSelect {
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(240, 246, 252, 0.85);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* "Usar" genérico */
+.btnPrimary {
+  background: var(--text);
+  color: var(--bg);
+}
+
+/* "Editar" */
 .btnGhost {
-  background: #f1f5f9;
-  color: #334155;
+  background: rgba(17, 24, 39, 0.05);
+  color: #64748b;
+  border: 1px solid rgba(17, 24, 39, 0.08);
 }
 
+[data-theme="dark"] .btnGhost {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(240, 246, 252, 0.60);
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+/* "Eliminar" — rojo sutil, sin relleno */
 .btnDanger {
-  background: #fee2e2;
-  color: #991b1b;
+  background: transparent;
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.18);
 }
 
+[data-theme="dark"] .btnDanger {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.2);
+}
+
+/* Estrella — ícono */
 .iconBtn {
-  width: 38px;
+  width: 34px;
   padding: 0;
   display: grid;
   place-items: center;
-  background: #f1f5f9;
+  background: rgba(17, 24, 39, 0.05);
   color: #94a3b8;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+}
+
+[data-theme="dark"] .iconBtn {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(240, 246, 252, 0.40);
+  border-color: rgba(255, 255, 255, 0.09);
 }
 
 .iconBtnActive {
   background: #fef3c7;
-  color: #f59e0b;
+  color: #d97706;
+  border-color: rgba(217, 119, 6, 0.2);
+}
+
+[data-theme="dark"] .iconBtnActive {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.22);
 }
 
 .btnPrimary:active,
@@ -235,15 +307,8 @@
 .btnGhost:active,
 .btnDanger:active,
 .iconBtn:active {
-  transform: scale(0.96);
-}
-
-.btnPrimary:hover,
-.btnSelect:hover,
-.btnGhost:hover,
-.btnDanger:hover,
-.iconBtn:hover {
-  filter: brightness(0.98);
+  transform: scale(0.94);
+  opacity: 0.8;
 }
 
 /* ===============================
@@ -252,34 +317,24 @@
 
 @media (max-width: 390px) {
   .card {
-    padding: 13px;
-    border-radius: 22px;
-    gap: 11px;
-  }
-
-  .card::before {
-    width: 4px;
-    border-radius: 22px 0 0 22px;
+    padding: 14px;
+    border-radius: 18px;
+    gap: 12px;
   }
 
   .cardMain {
-    grid-template-columns: 40px minmax(0, 1fr);
+    grid-template-columns: 36px minmax(0, 1fr);
     gap: 10px;
   }
 
   .iconBox {
-    width: 40px;
-    height: 40px;
-    border-radius: 15px;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
   }
 
-  .title {
-    font-size: 0.95rem;
-  }
-
-  .address {
-    font-size: 0.84rem;
-  }
+  .title { font-size: 0.91rem; }
+  .address { font-size: 0.83rem; }
 
   .foot {
     align-items: stretch;
@@ -298,17 +353,12 @@
   .rightActions {
     justify-content: stretch;
     display: grid;
-    grid-template-columns: 38px 1fr 1fr;
+    grid-template-columns: 34px 1fr 1fr;
   }
 
   .btnSelect,
   .btnPrimary {
     width: 100%;
-  }
-
-  .btnGhost,
-  .btnDanger {
-    padding: 0 10px;
   }
 }
 

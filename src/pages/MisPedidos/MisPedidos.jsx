@@ -1,11 +1,14 @@
 // src/pages/MisPedidos/MisPedidos.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLiveQuery } from "dexie-react-hooks";
+import { doc, updateDoc } from "firebase/firestore";
 import { useFlow } from "../../state/FlowContext";
 import PedidoCard from "../../components/PedidoCard/PedidoCard";
+import OrderTrackingModal from "../../components/OrderTrackingModal/OrderTrackingModal";
 import BottomNav from "../../components/BottomNav/BottomNav";
-import { loadAllOrdersDb, cancelOrderDb, patchOrderDb } from "../../lib/pedidosStore";
 import { clienteDb } from "../../db/clienteDb";
+import { db } from "../../services/firebase";
 import styles from "./MisPedidos.module.css";
 
 const SEG_PENDIENTES = "pendientes";
@@ -16,17 +19,13 @@ const SEG_CANCELADOS = "cancelados";
 const toArr = (x) => (Array.isArray(x) ? x : []);
 const norm = (s) => String(s || "").toLowerCase();
 
-const byDateDesc = (a, b) => {
-  const da = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
-  const db = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
-  return db - da;
-};
+const byDateDesc = (a, b) =>
+  (b?.createdAtMs || 0) - (a?.createdAtMs || 0);
 
 const uniqById = (arr) => {
   const seen = new Set();
-
   return arr.filter((item) => {
-    const id = item?.id;
+    const id = item?.orderId || item?.id;
     if (!id || seen.has(id)) return false;
     seen.add(id);
     return true;
@@ -68,11 +67,10 @@ export default function MisPedidos() {
   })();
 
   const [seg, setSeg] = useState(SEG_PENDIENTES);
-  const [todos, setTodos] = useState([]);
+  const [trackingId, setTrackingId] = useState(null);
+  const [trackingOrder, setTrackingOrder] = useState(null);
 
-  useEffect(() => {
-    loadAllOrdersDb().then(setTodos);
-  }, []);
+  const todos = useLiveQuery(() => clienteDb.orders.toArray(), []) ?? [];
 
   const S_PEND = new Set(["pending", "pendiente"]);
   const S_CURSO = new Set([
@@ -113,33 +111,38 @@ export default function MisPedidos() {
   const totalPedidos =
     pendientes.length + enCurso.length + finalizados.length + cancelados.length;
 
-  const reloadOrders = () => loadAllOrdersDb().then(setTodos);
-
-  const handleVer = (id) => {
-    navigate(`/flow/checkout?orderId=${id}`);
+  const handleVer = (id, order) => {
+    setTrackingOrder(order || null);
+    setTrackingId(id);
   };
 
   const handleCancelar = async (id) => {
     if (!confirm("¿Seguro que querés cancelar este pedido?")) return;
-    await cancelOrderDb(id).catch(() => {});
-    reloadOrders();
+    const nowISO = new Date().toISOString();
+    await clienteDb.orders.update(id, {
+      status: "cancelled",
+      updatedAt: nowISO,
+      updatedAtMs: Date.now(),
+    }).catch(() => {});
+    updateDoc(doc(db, "orders", id), {
+      status: "cancelled",
+      updatedAt: nowISO,
+      updatedAtMs: Date.now(),
+    }).catch(() => {});
   };
 
   const handleEliminar = async (id) => {
     if (!confirm("¿Eliminar este pedido del historial?")) return;
     await clienteDb.orders.delete(id).catch(() => {});
-    reloadOrders();
   };
 
   const handleRepetir = (pedido) => {
     try {
       flow?.setOrigin?.(pedido.origin || "");
       flow?.setDestination?.(pedido.destination || "");
-      flow?.setServiceType?.(pedido.serviceType || "");
-      flow?.setNotes?.("");
+      flow?.setService?.(pedido.serviceType || "simple", 0);
       flow?.setKm?.(pedido.km || 0);
     } catch {}
-
     navigate("/flow/enviar");
   };
 
@@ -226,22 +229,36 @@ export default function MisPedidos() {
           </div>
         ) : (
           <div className={styles.list}>
-            {currentList.map((pedido) => (
-              <PedidoCard
-                key={pedido.orderId || pedido.id}
-                pedido={pedido}
-                isCurrent={S_CURSO.has(norm(pedido?.status)) || S_PEND.has(norm(pedido?.status))}
-                onVer={handleVer}
-                onCancelar={handleCancelar}
-                onRepetir={handleRepetir}
-                onEliminar={handleEliminar}
-              />
-            ))}
+            {currentList.map((pedido) => {
+              const pid = pedido.orderId || pedido.id;
+              return (
+                <PedidoCard
+                  key={pid}
+                  pedido={pedido}
+                  isCurrent={S_CURSO.has(norm(pedido?.status)) || S_PEND.has(norm(pedido?.status))}
+                  onVer={() => handleVer(pid, pedido)}
+                  onCancelar={() => handleCancelar(pid)}
+                  onRepetir={handleRepetir}
+                  onEliminar={() => handleEliminar(pid)}
+                />
+              );
+            })}
           </div>
         )}
       </main>
 
       <BottomNav />
+
+      {trackingId && (
+        <OrderTrackingModal
+          orderId={trackingId}
+          initialOrder={trackingOrder}
+          onClose={() => {
+            setTrackingId(null);
+            setTrackingOrder(null);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "../../components/BottomNav/BottomNav";
-import OrdersDock from "../../components/OrdersDock/OrdersDock";
+import ActiveOrdersSheet from "../../components/ActiveOrdersSheet/ActiveOrdersSheet";
 import { useFlow } from "../../state/FlowContext";
 import { useAuth } from "../../state/AuthProvider";
 import { useTheme } from "../../hooks/useTheme";
@@ -114,7 +114,7 @@ export default function Home() {
 
   // Navegación
   const goAddresses = () => { setProfileOpen(false); navigate("/direcciones"); };
-  const goProfile   = () => { setProfileOpen(false); navigate("/perfil"); };
+  const goProfile   = () => { setProfileOpen(false); navigate("/profile"); };
   const goNotifications = () => console.log("[HOME] Notificaciones pendiente");
 
   const handleLogout = async () => {
@@ -338,7 +338,7 @@ export default function Home() {
 
       </main>
 
-      <OrdersDock />
+      <ActiveOrdersSheet />
       <BottomNav />
 
       {deliveryModalOpen && (

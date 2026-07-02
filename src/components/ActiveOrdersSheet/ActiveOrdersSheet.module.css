@@ -1,0 +1,373 @@
+/* ── Sheet wrapper ──────────────────────────────────────────────
+   Fixed just above BottomNav (58px + safe-area + 8px gap).
+   Centered with left+transform — same pattern as OrdersDock.
+   Uses flexbox so the list fills whatever height is left after
+   the handle zone.
+──────────────────────────────────────────────────────────── */
+.sheet {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(58px + env(safe-area-inset-bottom, 0px) + 8px);
+  width: calc(100% - 24px);
+  max-width: 480px;
+  z-index: 19;
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px 20px 16px 16px;
+  box-shadow:
+    0 -4px 28px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.05);
+
+  transition: height 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: height;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+@media (max-width: 360px) {
+  .sheet {
+    bottom: calc(54px + env(safe-area-inset-bottom, 0px) + 8px);
+    width: calc(100% - 16px);
+  }
+}
+
+/* ── Handle zone — drag surface + peek content ─────────────── */
+
+.handleZone {
+  flex-shrink: 0;
+  cursor: pointer;
+  touch-action: none; /* pointer capture requires this */
+}
+
+.handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  margin: 8px auto 0;
+  opacity: 0.7;
+}
+
+/* ── Peek row ───────────────────────────────────────────────── */
+
+.peekRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 8px;
+}
+
+/* Status dot */
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot_searching {
+  background: #94a3b8;
+  animation: dotPulse 1.8s ease-in-out infinite;
+}
+
+.dot_offering {
+  background: #f59e0b;
+  animation: dotPulse 1.2s ease-in-out infinite;
+}
+
+.dot_assigned { background: #22c55e; }
+
+.dot_moving {
+  background: #3b82f6;
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.7); }
+}
+
+/* Small driver avatar (peek) */
+.avatarSm {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  font-size: 14px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.peekMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.peekName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.peekId {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.peekSub {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+.peekStatus {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+/* Right side: badge + chevron */
+.peekRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.badge {
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.chevron {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+}
+
+/* ── Progress bar ─────────────────────────────────────────── */
+
+.progressTrack {
+  height: 3px;
+  background: var(--surface-2, #f1f5f9);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.fill_searching {
+  width: 40%;
+  background: #cbd5e1;
+  animation: scanProgress 1.8s ease-in-out infinite;
+}
+
+.fill_offering {
+  width: 55%;
+  background: #f59e0b;
+  animation: scanProgress 1.2s ease-in-out infinite;
+}
+
+.fill_assigned {
+  width: 70%;
+  background: #22c55e;
+  transition: width 0.6s ease;
+}
+
+.fill_moving {
+  width: 85%;
+  background: #3b82f6;
+  transition: width 0.6s ease;
+}
+
+@keyframes scanProgress {
+  0%   { transform: translateX(-150%); }
+  100% { transform: translateX(350%); }
+}
+
+/* ── Expanded list area ───────────────────────────────────── */
+
+.listArea {
+  flex: 1;
+  min-height: 0;
+  overflow-y: hidden; /* controlled by .listVisible */
+  display: flex;
+  flex-direction: column;
+}
+
+.listVisible {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.listArea::-webkit-scrollbar { display: none; }
+
+.listHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 6px;
+  flex-shrink: 0;
+}
+
+.listHeader strong {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.01em;
+}
+
+.listHeader span {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* ── Order card ────────────────────────────────────────────── */
+
+.card {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--border);
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+  transition: background 0.12s ease;
+}
+
+.card:active { background: var(--surface-2); }
+
+.cardMain {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px 9px;
+}
+
+/* Driver avatar in card */
+.driverAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  font-size: 15px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.cardText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.driverName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.cardId {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.cardSub {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+.cardStatus {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+.cardArrow {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── Ver todos button ─────────────────────────────────────── */
+
+.verTodos {
+  width: 100%;
+  border: none;
+  border-top: 1px solid var(--border);
+  padding: 14px 16px;
+  background: transparent;
+  color: var(--accent-text);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s ease;
+}
+
+.verTodos:active { background: var(--surface-2); }

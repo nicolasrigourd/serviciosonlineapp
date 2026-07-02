@@ -7,6 +7,7 @@ import styles from "./DatosAdicionales.module.css";
 import mercadoPagoLogo from "../../assets/logomercadop.jpg";
 
 import { auth, db } from "../../services/firebase";
+import { useAuth } from "../../state/AuthProvider";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 function onlyDigits(value) {
@@ -51,14 +52,6 @@ function readOperationType(state) {
   } catch {}
 
   return "envio";
-}
-
-function readSessionUser() {
-  try {
-    return JSON.parse(localStorage.getItem("SessionUser") || "null");
-  } catch {
-    return null;
-  }
 }
 
 function getUserDisplayName(user) {
@@ -215,6 +208,8 @@ const PAYMENT_OPTIONS = {
 };
 
 export default function DatosAdicionales() {
+  const { user: authUser } = useAuth();
+
   const {
     state,
 
@@ -270,7 +265,7 @@ export default function DatosAdicionales() {
   const [localError, setLocalError] = useState("");
 
   useEffect(() => {
-    const u = readSessionUser();
+    const u = authUser;
     const nombre = getUserDisplayName(u);
     const telefono = getUserPhone(u);
     const addressExtra = getDefaultAddressExtra(u);
@@ -324,8 +319,7 @@ export default function DatosAdicionales() {
         return "";
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authUser]);
 
   const precio = useMemo(() => {
     if (state.price && Number(state.price) > 0) return Number(state.price);
@@ -449,7 +443,7 @@ export default function DatosAdicionales() {
     setContact?.(recipientPhone);
 
     try {
-      const su = readSessionUser();
+      const su = authUser;
       const previousOrder = buildOrder?.(su) || {};
 
       const now = new Date();
@@ -701,13 +695,12 @@ export default function DatosAdicionales() {
       console.log("[DATOS_ADICIONALES][ORDER_FINAL_NUEVO]", order);
 
       saveOrder?.(order);
-      localStorage.setItem("NuevoPedido", JSON.stringify(order));
 
       await setDoc(doc(db, "orders", String(order.orderId)), order, {
         merge: false,
       });
 
-      navigate("/flow/checkout");
+      navigate(`/flow/checkout?orderId=${order.orderId}`);
     } catch (e) {
       console.error(e);
       setLocalError("No se pudo crear el pedido. Intentá nuevamente.");
