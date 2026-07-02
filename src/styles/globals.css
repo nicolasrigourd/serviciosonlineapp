@@ -1,49 +1,85 @@
 /* src/styles/globals.css */
+@import "./theme.css";
 
-/* Reset básico */
-* {
+/* ── Google Maps Autocomplete ──────────────────────────────────── */
+
+.pac-container {
+  border-radius: 14px !important;
+  margin-top: 5px !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+  box-shadow: var(--shadow-lg) !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  overflow: hidden;
+}
+
+.pac-item {
+  border-top: 1px solid var(--border) !important;
+  padding: 9px 14px !important;
+  color: var(--text-muted) !important;
+  font-size: 0.86rem !important;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.pac-item:first-child { border-top: none !important; }
+
+.pac-item:hover,
+.pac-item-selected {
+  background: var(--surface-2) !important;
+}
+
+.pac-item-query {
+  color: var(--text) !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+}
+
+.pac-matched {
+  color: var(--accent-text) !important;
+  font-weight: 700 !important;
+}
+
+.pac-icon {
+  display: none !important;
+}
+
+/* Sin logo de Google en el footer */
+.pac-logo::after {
+  display: none !important;
+}
+
+/* ── Reset básico ─────────────────────────────────────────────── */
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Fuente general */
+/* ── Base ─────────────────────────────────────────────────────── */
 html, body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   font-size: 16px;
-  background-color: #f9f9f9; /* fondo claro por defecto */
-  color: #222;              /* texto base */
+  background-color: var(--bg);
+  color: var(--text);
   height: 100%;
   width: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Quitar subrayado a links por defecto */
+/* ── Links ────────────────────────────────────────────────────── */
 a {
   text-decoration: none;
   color: inherit;
 }
 
-/* Inputs y botones consistentes */
+/* ── Inputs y botones: hereden fuente, sin estilos globales ───── */
 input, button, select, textarea {
   font-family: inherit;
   font-size: 1rem;
   outline: none;
   border: none;
-}
-
-/* Botón base */
-button {
-  cursor: pointer;
-  background-color: #4CAF50;
-  color: white;
-  padding: 0.6rem 1rem;
-  border-radius: 6px;
-  transition: background 0.2s ease;
-}
-button:hover {
-  background-color: #43a047;
-}
-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+  background: none;
+  color: inherit;
 }

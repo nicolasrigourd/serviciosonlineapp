@@ -10,7 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/cli": "^8.4.1",
+    "@capacitor/core": "^8.4.1",
+    "@capacitor/geolocation": "^8.2.0",
     "@tabler/icons-react": "^3.41.1",
+    "dexie": "^4.4.4",
+    "dexie-react-hooks": "^4.4.0",
     "firebase": "^12.2.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

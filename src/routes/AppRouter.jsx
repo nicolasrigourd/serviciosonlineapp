@@ -7,6 +7,11 @@ import Retirar from "../pages/Retirar/Retirar";
 import Register from "../pages/Register/Register";
 import DatosAdicionales from "../pages/DatosAdicionales/DatosAdicionales";
 import Checkout from "../pages/Checkout/Checkout";
+import FlowEnvio from "../pages/FlowEnvio/FlowEnvio";
+import FlowRetiro from "../pages/FlowRetiro/FlowRetiro";
+import FlowDelivery from "../pages/FlowDelivery/FlowDelivery";
+import FlowCompras from "../pages/FlowCompras/FlowCompras";
+import FlowValores from "../pages/FlowValores/FlowValores";
 import MisPedidos from "../pages/MisPedidos/MisPedidos";
 import MisDirecciones from "../pages/MisDirecciones/MisDirecciones";
 import Profile from "../pages/Profile/Profile";
@@ -46,6 +51,51 @@ export default function AppRouter() {
           element={
             <ProtectedRoute loadingFallback={loader}>
               <Home />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/flow/envio"
+          element={
+            <ProtectedRoute loadingFallback={loader}>
+              <FlowEnvio />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/flow/retiro"
+          element={
+            <ProtectedRoute loadingFallback={loader}>
+              <FlowRetiro />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/flow/delivery"
+          element={
+            <ProtectedRoute loadingFallback={loader}>
+              <FlowDelivery />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/flow/compras"
+          element={
+            <ProtectedRoute loadingFallback={loader}>
+              <FlowCompras />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/flow/valores"
+          element={
+            <ProtectedRoute loadingFallback={loader}>
+              <FlowValores />
             </ProtectedRoute>
           }
         />

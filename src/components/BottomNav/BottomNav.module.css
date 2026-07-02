@@ -2,41 +2,48 @@
   position: fixed;
   left: 0; right: 0; bottom: 0;
   height: 58px;
-  background: #fff;
-  border-top: 1px solid #eee;
-
-  /* ✅ layout flexible por cantidad de items */
+  background: var(--surface);
+  border-top: 1px solid var(--border);
   display: grid;
-  grid-auto-flow: column;   /* coloca los hijos en columnas */
-  grid-auto-columns: 1fr;   /* cada ítem ocupa el mismo ancho */
-
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   padding-bottom: env(safe-area-inset-bottom, 0);
   z-index: 20;
+}
+
+[data-theme="light"] .nav {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(17, 24, 39, 0.12);
+  box-shadow: 0 -4px 20px rgba(17, 24, 39, 0.10);
+}
+
+[data-theme="dark"] .nav {
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.30);
 }
 
 .item {
   display: grid;
   place-items: center;
   gap: 2px;
-  color: #6b7280;
+  color: var(--text-muted);
   text-decoration: none;
-  font-size: .8rem;
   padding-top: 6px;
-  min-width: 0;            /* evita desbordes raros */
+  min-width: 0;
+  transition: color 0.15s ease;
 }
 
-.icon { line-height: 0; }
-.label { font-size: .75rem; white-space: nowrap; }
+.icon  { line-height: 0; }
+.label { font-size: 0.72rem; font-weight: 500; white-space: nowrap; }
 
-/* Estado activo */
 .active {
-  color: #2e7d32;
+  color: var(--accent-text);
   font-weight: 700;
 }
 
-/* 🐣 Micro-ajustes para pantallas muy angostas */
 @media (max-width: 360px) {
-  .nav { height: 54px; }
-  .item { font-size: .76rem; padding-top: 4px; }
-  .label { font-size: .72rem; }
+  .nav  { height: 54px; }
+  .item { padding-top: 4px; }
+  .label { font-size: 0.68rem; }
 }

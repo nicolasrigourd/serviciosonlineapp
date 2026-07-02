@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { IconCurrentLocation } from "@tabler/icons-react";
 import styles from "./Register.module.css";
+import { useAuth } from "../../state/AuthProvider";
 
 // Google Maps
 import { loadGoogleMaps } from "../../lib/googleMapsLoader";
@@ -25,6 +27,7 @@ import AdressMapPicker from "../../components/AdressMapPicker/AdressMapPicker";
 
 export default function Register() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const submitLockRef = useRef(false);
   const exitTimeoutRef = useRef(null);
@@ -57,6 +60,7 @@ export default function Register() {
   const autoRef = useRef(null);
 
   const [mapOpen, setMapOpen] = useState(false);
+  const [locating, setLocating] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
@@ -169,6 +173,74 @@ export default function Register() {
 
     setMapOpen(false);
     setError("");
+  };
+
+  const handleGetLocation = async () => {
+    if (locating) return;
+    setLocating(true);
+    setError("");
+
+    try {
+      const { Geolocation } = await import("@capacitor/geolocation");
+      const perm = await Geolocation.checkPermissions();
+
+      if (perm.location === "denied") {
+        setError("Permiso de ubicación denegado. Habilitalo en la configuración del dispositivo o escribí tu dirección.");
+        setLocating(false);
+        return;
+      }
+
+      if (perm.location !== "granted") {
+        const req = await Geolocation.requestPermissions({ permissions: ["location"] });
+        if (req.location !== "granted") {
+          setError("Necesitamos permiso de ubicación para usar esta función.");
+          setLocating(false);
+          return;
+        }
+      }
+
+      const pos = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 10000,
+      });
+
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      // Reverse geocode con Google Maps
+      const google = await loadGoogleMaps(apiKey);
+      const geocoder = new google.maps.Geocoder();
+      const { results } = await geocoder.geocode({ location: { lat, lng } });
+
+      if (!results || results.length === 0) {
+        setError("No encontramos una dirección para tu ubicación. Completala manualmente.");
+        setLocating(false);
+        return;
+      }
+
+      const formatted = results[0].formatted_address;
+
+      setForm((prev) => ({ ...prev, direccion: formatted }));
+      setDirPlace({
+        formatted,
+        lat,
+        lng,
+        placeId: results[0].place_id || "",
+        hasGeometry: true,
+        source: "gps",
+      });
+      setError("");
+    } catch (err) {
+      console.error("[LOCATION]", err);
+      const code = err?.code ?? err?.message ?? "";
+      if (String(code).includes("1") || String(code).toLowerCase().includes("denied")) {
+        setError("Permiso de ubicación denegado. Podés escribir tu dirección manualmente.");
+      } else {
+        setError("No pudimos obtener tu ubicación. Intentá de nuevo.");
+      }
+    } finally {
+      setLocating(false);
+    }
   };
 
   const genUserNumber = () =>
@@ -385,13 +457,20 @@ export default function Register() {
       setSuccess(true);
       setSubmitting(false);
 
+      try {
+        await login(usernameKey, form.password);
+      } catch {
+        // Si el auto-login falla, mandamos al login manual
+        navigate("/login", { replace: true });
+        return;
+      }
+
       exitTimeoutRef.current = setTimeout(() => {
         setExiting(true);
-
         navTimeoutRef.current = setTimeout(() => {
-          navigate("/login", { replace: true });
+          navigate("/home", { replace: true });
         }, 600);
-      }, 1000);
+      }, 800);
     } catch (err) {
       console.error("[REGISTER]", err);
       setSubmitting(false);
@@ -402,31 +481,20 @@ export default function Register() {
 
   const addressStatusText = dirPlace.hasGeometry
     ? dirPlace.source === "gps"
-      ? "Ubicación GPS confirmada."
+      ? "✓ Ubicación GPS obtenida"
       : dirPlace.source === "manual_map"
-        ? "Ubicación confirmada en el mapa."
-        : "Dirección validada con Google."
-    : "Elegí una dirección del listado o confirmá la ubicación en el mapa.";
+        ? "✓ Ubicación confirmada en el mapa"
+        : "✓ Dirección validada"
+    : "";
 
   return (
     <div className={`${styles.screen} ${exiting ? styles.exit : ""}`}>
       <main className={styles.main}>
         <section className={styles.card}>
           <header className={styles.pageHeader}>
-            <button
-              type="button"
-              className={styles.backBtn}
-              onClick={() => navigate("/login")}
-              aria-label="Volver al login"
-            >
-              ←
-            </button>
-
-            <div>
-              <span>Crear cuenta</span>
-              <h1>Registrate</h1>
-              <p>Completá tus datos para pedir envíos más rápido.</p>
-            </div>
+            <span>Crear cuenta</span>
+            <h1>Registrate</h1>
+            <p>Completá tus datos para pedir envíos más rápido.</p>
           </header>
 
           <form
@@ -502,13 +570,9 @@ export default function Register() {
                 <h2>Dirección principal</h2>
               </div>
 
-              <p className={styles.sectionText}>
-                Guardaremos esta ubicación como tu dirección principal para tus primeros pedidos.
-              </p>
-
               <div className={styles.field}>
                 <label className={styles.label} htmlFor="direccion">
-                  Dirección o ubicación
+                  Ingresá tu dirección
                 </label>
 
                 <div className={styles.addressRow}>
@@ -518,7 +582,7 @@ export default function Register() {
                     name="direccion"
                     type="text"
                     className={styles.input}
-                    placeholder="Calle, barrio o lugar"
+                    placeholder="Calle, número, barrio..."
                     value={form.direccion}
                     onChange={handleChange}
                     autoComplete="street-address"
@@ -527,20 +591,24 @@ export default function Register() {
 
                   <button
                     type="button"
-                    className={styles.mapBtn}
-                    onClick={() => setMapOpen(true)}
+                    className={`${styles.mapBtn} ${locating ? styles.locating : ""}`}
+                    onClick={handleGetLocation}
+                    disabled={locating}
                   >
-                    Mapa
+                    {locating ? (
+                      <span className={styles.locationSpinner} />
+                    ) : (
+                      <IconCurrentLocation size={15} stroke={2} />
+                    )}
+                    {locating ? "Obteniendo…" : "Mi ubicación"}
                   </button>
                 </div>
 
-                <div
-                  className={`${styles.addressStatus} ${
-                    dirPlace.hasGeometry ? styles.addressStatusOk : ""
-                  }`}
-                >
-                  {addressStatusText}
-                </div>
+                {dirPlace.hasGeometry && (
+                  <div className={`${styles.addressStatus} ${styles.addressStatusOk}`}>
+                    {addressStatusText}
+                  </div>
+                )}
               </div>
 
               <div className={styles.twoCols}>
@@ -716,7 +784,7 @@ export default function Register() {
                 className={`${styles.notice} ${styles.successToast}`}
                 role="status"
               >
-                Usuario creado correctamente
+                ¡Cuenta creada! Ingresando…
               </div>
             )}
 

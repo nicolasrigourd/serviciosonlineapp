@@ -1,8 +1,8 @@
 .homeRoot {
   min-height: 100dvh;
   height: 100dvh;
-  background: #f3f4f6;
-  color: #111827;
+  background: var(--bg);
+  color: var(--text);
   overflow: hidden;
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
@@ -11,118 +11,58 @@
 .homeMain {
   min-height: 0;
   overflow: hidden;
-  position: relative;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
 }
 
-/* ===============================
-   HERO SUPERIOR NEGRO
-   =============================== */
+/* ── Zona superior fija ──────────────────────────────────────── */
 
-.topStage {
+.top {
+  background: var(--bg);
+  padding: 14px 16px 0;
+  padding-top: calc(14px + env(safe-area-inset-top));
   position: relative;
-  min-height: 205px;
-  max-height: 235px;
-  overflow: visible;
-  padding:
-    calc(12px + env(safe-area-inset-top))
-    14px
-    28px;
-  box-sizing: border-box;
-  background:
-    radial-gradient(circle at 14% 18%, rgba(87, 215, 10, 0.18), transparent 28%),
-    radial-gradient(circle at 86% 30%, rgba(87, 215, 10, 0.1), transparent 34%),
-    linear-gradient(145deg, #050607 0%, #101216 62%, #050607 100%);
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 64px;
+  z-index: 10;
 }
 
-.topStage::before {
-  content: "";
-  position: absolute;
-  inset: -40px;
-  opacity: 0.18;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
-  background-size: 42px 42px;
-  transform: rotate(-8deg) scale(1.16);
-  pointer-events: none;
+[data-theme="light"] .top {
+  border-bottom: 1px solid rgba(17, 24, 39, 0.12);
+  box-shadow: 0 3px 14px rgba(17, 24, 39, 0.09);
 }
 
-.topGlowOne,
-.topGlowTwo {
-  position: absolute;
-  border-radius: 999px;
-  filter: blur(12px);
-  pointer-events: none;
-}
+/* Fila 1: avatar + saludo + campana */
 
-.topGlowOne {
-  width: 160px;
-  height: 160px;
-  left: -36px;
-  bottom: -44px;
-  background: rgba(87, 215, 10, 0.18);
-}
-
-.topGlowTwo {
-  width: 140px;
-  height: 140px;
-  right: -30px;
-  top: 70px;
-  background: rgba(87, 215, 10, 0.11);
-}
-
-/* ===============================
-   HEADER FLOTANTE
-   =============================== */
-
-.homeFloatingHeader {
-  position: relative;
-  z-index: 30;
-  min-height: 66px;
+.topBar {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) 46px;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
   align-items: center;
-  gap: 11px;
-  padding: 9px 10px;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow:
-    0 18px 42px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  gap: 10px;
+  margin-bottom: 18px;
 }
 
 .profileWrapper {
   position: relative;
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
 }
 
 .homeAvatar {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border: none;
-  border-radius: 18px;
+  border-radius: 14px;
   overflow: hidden;
   display: grid;
   place-items: center;
-  background: #111827;
-  color: #ffffff;
-  font-weight: 950;
-  font-size: 1.2rem;
+  background: var(--accent);
+  color: #000000;
+  font-weight: 700;
+  font-size: 1.1rem;
   cursor: pointer;
   padding: 0;
-  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.16);
 }
 
-.homeAvatar:active {
-  transform: scale(0.98);
-}
+.homeAvatar:active { transform: scale(0.97); }
 
 .homeAvatar img {
   width: 100%;
@@ -130,143 +70,129 @@
   object-fit: cover;
 }
 
-.homeAvatar span {
-  display: grid;
-  place-items: center;
-}
-
-.homeHeaderInfo {
+.greeting {
   min-width: 0;
   display: grid;
-  gap: 3px;
+  gap: 1px;
 }
 
-.homeHeaderInfo strong {
-  color: #111827;
-  font-size: 1rem;
-  line-height: 1.1;
-  font-weight: 950;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.notificationBtn {
-  position: relative;
-  width: 46px;
-  height: 46px;
-  border: none;
-  border-radius: 17px;
-  display: grid;
-  place-items: center;
-  background: #f1f5f9;
-  color: #111827;
-  cursor: pointer;
-}
-
-.notificationBtn:active {
-  transform: scale(0.96);
-}
-
-.notificationDot {
-  position: absolute;
-  top: 11px;
-  right: 12px;
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #57d70a;
-  box-shadow: 0 0 0 3px rgba(87, 215, 10, 0.18);
-}
-
-/* ===============================
-   DIRECCIÓN INTEGRADA AL HERO
-   =============================== */
-
-.heroAddress {
-  position: relative;
-  z-index: 20;
-  width: 100%;
-  margin-top: 18px;
-  min-height: 72px;
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 24px;
-  align-items: center;
-  gap: 11px;
-  border: none;
-  border-radius: 0;
-  padding: 4px 4px 4px 2px;
-  background: transparent;
-  color: #ffffff;
-  text-align: left;
-  cursor: pointer;
-}
-
-.heroAddress:active {
-  transform: scale(0.992);
-}
-
-.heroAddressIcon {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  color: #57d70a;
-}
-
-.heroAddressText {
-  min-width: 0;
-  display: grid;
-  gap: 4px;
-}
-
-.heroAddressText strong {
-  display: block;
-  color: #57d70a;
+.greeting small {
+  color: var(--text-muted);
   font-size: 0.72rem;
-  line-height: 1;
-  font-weight: 950;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-weight: 500;
 }
 
-.heroAddressText span {
-  display: block;
-  color: #ffffff;
-  font-size: 0.92rem;
-  line-height: 1.13;
-  font-weight: 950;
-  letter-spacing: -0.035em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.heroAddressText em {
-  display: block;
-  color: rgba(255, 255, 255, 0.72);
-  font-style: normal;
-  font-size: 0.8rem;
-  line-height: 1.12;
+.greeting strong {
+  color: var(--text);
+  font-size: 1rem;
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.heroAddressChevron {
+.bellBtn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 14px;
   display: grid;
   place-items: center;
-  color: #57d70a;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
 }
 
-.heroAddressWarning .heroAddressText span {
-  color: #fef3c7;
+.bellBtn:active { transform: scale(0.96); }
+
+.bellDot {
+  position: absolute;
+  top: 10px;
+  right: 11px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--bg);
 }
 
-/* ===============================
-   MENÚ PERFIL
-   =============================== */
+/* Fila 2: card de dirección */
+
+.addrCard {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 11px 12px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.addrCard:hover  { background: var(--surface-2); }
+.addrCard:active { transform: scale(0.992); }
+
+.addrCardWarning .addrText span { color: rgba(254, 243, 199, 0.9); }
+
+.addrIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--accent-bg);
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.addrText { min-width: 0; }
+
+.addrText small {
+  display: block;
+  color: var(--accent-text);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.addrText span {
+  display: block;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.addrText em {
+  display: block;
+  font-style: normal;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.addrChevron {
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+}
+
+/* ── Menú perfil ─────────────────────────────────────────────── */
 
 .profileMenu {
   position: absolute;
@@ -276,26 +202,17 @@
   width: 218px;
   padding: 8px;
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 22px 48px rgba(17, 24, 39, 0.22);
-  border: 1px solid rgba(17, 24, 39, 0.06);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
   display: grid;
   gap: 4px;
   animation: profileMenuIn 0.16s ease-out;
 }
 
 @keyframes profileMenuIn {
-  from {
-    opacity: 0;
-    transform: translateY(-4px) scale(0.98);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
 }
 
 .profileMenu button {
@@ -305,24 +222,19 @@
   border-radius: 15px;
   padding: 9px 10px;
   background: transparent;
-  color: #111827;
+  color: var(--text);
   display: grid;
   grid-template-columns: 30px 1fr;
   align-items: center;
   gap: 8px;
   text-align: left;
   font-size: 0.84rem;
-  font-weight: 850;
+  font-weight: 600;
   cursor: pointer;
 }
 
-.profileMenu button:hover {
-  background: #f3f4f6;
-}
-
-.profileMenu button:active {
-  transform: scale(0.99);
-}
+.profileMenu button:hover  { background: var(--surface-2); }
+.profileMenu button:active { transform: scale(0.99); }
 
 .profileMenuIcon {
   width: 30px;
@@ -330,31 +242,31 @@
   border-radius: 12px;
   display: grid;
   place-items: center;
-  background: #f3f4f6;
-  color: #111827;
+  background: var(--surface-2);
+  color: var(--text);
 }
 
-.logoutOption {
-  color: #991b1b !important;
-}
+.logoutOption { color: #ef4444 !important; }
 
 .logoutOption .profileMenuIcon {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
+[data-theme="light"] .logoutOption { color: #991b1b !important; }
+
+[data-theme="light"] .logoutOption .profileMenuIcon {
   background: #fee2e2;
   color: #991b1b;
 }
 
-/* ===============================
-   CONTENIDO
-   =============================== */
+/* ── Contenido scrollable ────────────────────────────────────── */
 
 .homeContent {
-  position: relative;
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 14px 14px calc(86px + env(safe-area-inset-bottom));
-  margin-top: -22px;
-  z-index: 6;
+  padding: 0 16px calc(86px + env(safe-area-inset-bottom));
 }
 
 .homeLayout {
@@ -364,79 +276,62 @@
   display: grid;
   gap: 12px;
   padding-bottom: 10px;
-  box-sizing: border-box;
 }
 
-/* ===============================
-   SERVICIOS
-   =============================== */
+/* ── Servicios ───────────────────────────────────────────────── */
 
 .servicesPanel {
   border-radius: 26px;
   padding: 16px 14px 15px;
-  background: #ffffff;
-  box-shadow: 0 16px 38px rgba(17, 24, 39, 0.09);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
 }
 
 .servicesHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
   margin-bottom: 14px;
 }
 
 .sectionKicker {
   display: inline-flex;
-  width: fit-content;
-  min-height: 24px;
   align-items: center;
-  padding: 0 10px;
+  padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(22, 163, 74, 0.1);
-  color: #15803d;
-  font-size: 0.68rem;
-  font-weight: 950;
-  letter-spacing: 0.06em;
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
+  margin-bottom: 6px;
 }
 
 .servicesHeader h1 {
-  margin: 8px 0 3px;
-  color: #111827;
-  font-size: clamp(1.35rem, 7vw, 1.9rem);
-  line-height: 0.98;
-  font-weight: 1000;
-  letter-spacing: -0.06em;
+  margin: 0 0 3px;
+  color: var(--text);
+  font-size: clamp(1.2rem, 6vw, 1.7rem);
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.04em;
 }
 
 .servicesHeader p {
   margin: 0;
-  color: #6b7280;
-  font-size: 0.84rem;
-  line-height: 1.22;
-  font-weight: 700;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.3;
+  font-weight: 400;
 }
 
 .actionsGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-content: start;
   gap: 10px;
-  height: auto;
-  min-height: auto;
-  overflow: visible;
-  padding: 0 0 2px;
-  box-sizing: border-box;
 }
 
-/* ===============================
-   CARRUSEL COMPACTO
-   =============================== */
+/* ── Carrusel ────────────────────────────────────────────────── */
 
 .carouselSection {
-  width: 100%;
-  overflow: hidden;
   display: grid;
   gap: 8px;
 }
@@ -445,132 +340,124 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 3px;
+  padding: 0 2px;
 }
 
 .carouselHeader span {
-  color: #15803d;
-  font-size: 0.68rem;
-  font-weight: 950;
-  letter-spacing: 0.05em;
+  color: var(--accent-text);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .carouselHeader strong {
-  color: #111827;
-  font-size: 0.86rem;
-  font-weight: 950;
+  color: var(--text);
+  font-size: 0.84rem;
+  font-weight: 600;
 }
 
 .carouselTrack {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(232px, 72%);
+  grid-auto-columns: minmax(220px, 70%);
   gap: 10px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  padding: 0 0 4px;
+  padding-bottom: 4px;
 }
 
-.carouselTrack::-webkit-scrollbar {
-  display: none;
-}
+.carouselTrack::-webkit-scrollbar { display: none; }
 
 .carouselCard {
-  min-height: 96px;
   scroll-snap-align: start;
   border-radius: 22px;
-  padding: 12px;
-  background: #ffffff;
-  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.08);
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
   gap: 12px;
   overflow: hidden;
   position: relative;
+  min-height: 96px;
 }
 
 .carouselCard::before {
   content: "";
   position: absolute;
-  right: -42px;
-  bottom: -54px;
-  width: 118px;
-  height: 118px;
+  right: -30px;
+  bottom: -40px;
+  width: 100px;
+  height: 100px;
   border-radius: 999px;
-  background: rgba(34, 197, 94, 0.14);
+  background: var(--accent-bg);
 }
 
-.carouselCard > * {
-  position: relative;
-  z-index: 2;
-}
+.carouselCard > * { position: relative; z-index: 2; }
 
 .carouselCard span {
   display: inline-flex;
   width: fit-content;
   border-radius: 999px;
-  padding: 5px 8px;
-  background: #dcfce7;
-  color: #15803d;
-  font-size: 0.64rem;
+  padding: 4px 8px;
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  font-size: 0.62rem;
   line-height: 1;
-  font-weight: 950;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
 
 .carouselCard h2 {
-  margin: 7px 0 0;
-  color: #111827;
-  font-size: 0.98rem;
-  line-height: 1.03;
-  font-weight: 1000;
-  letter-spacing: -0.04em;
+  margin: 6px 0 3px;
+  color: var(--text);
+  font-size: 0.96rem;
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
 .carouselCard p {
-  margin: 4px 0 0;
-  color: #6b7280;
-  font-size: 0.74rem;
-  line-height: 1.18;
-  font-weight: 650;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.73rem;
+  line-height: 1.2;
+  font-weight: 400;
 }
 
 .carouselCard button {
-  min-width: 62px;
-  min-height: 36px;
+  min-width: 60px;
+  height: 34px;
   border: none;
   border-radius: 999px;
   padding: 0 12px;
-  background: #111827;
-  color: #ffffff;
-  font-size: 0.75rem;
-  font-weight: 900;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 0.73rem;
+  font-weight: 700;
   cursor: pointer;
 }
 
-.carouselCard button:active {
-  transform: scale(0.98);
-}
+.carouselCard button:active { transform: scale(0.97); }
 
-/* ===============================
-   BANNER INFERIOR
-   =============================== */
+/* ── Banner inferior ─────────────────────────────────────────── */
 
 .infoBanner {
   display: grid;
   grid-template-columns: 42px 1fr;
   align-items: center;
   gap: 12px;
-  border-radius: 22px;
+  border-radius: 20px;
   padding: 13px;
-  background: #ffffff;
-  color: #111827;
-  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.06);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
 }
 
 .infoIcon {
@@ -578,207 +465,74 @@
   height: 42px;
   display: grid;
   place-items: center;
-  border-radius: 16px;
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.infoText {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
+  border-radius: 14px;
+  background: var(--accent-bg);
+  color: var(--accent-text);
 }
 
 .infoText strong {
-  color: #111827;
-  font-size: 0.9rem;
-  line-height: 1.15;
-  font-weight: 900;
+  display: block;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 600;
 }
 
 .infoText span {
-  color: #6b7280;
-  font-size: 0.78rem;
-  line-height: 1.2;
-  font-weight: 650;
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 400;
+  margin-top: 2px;
 }
 
-/* ===============================
-   RESPONSIVE
-   =============================== */
+/* ── Responsive ──────────────────────────────────────────────── */
 
 @media (max-width: 390px) {
-  .topStage {
-    min-height: 198px;
-    max-height: 222px;
-    padding-left: 10px;
-    padding-right: 10px;
-    border-bottom-right-radius: 52px;
-  }
+  .top { padding-left: 12px; padding-right: 12px; }
 
-  .homeFloatingHeader {
-    grid-template-columns: 44px minmax(0, 1fr) 42px;
-    border-radius: 22px;
-    min-height: 62px;
-    padding: 8px;
-    gap: 8px;
-  }
+  .topBar { gap: 8px; margin-bottom: 10px; }
 
-  .profileWrapper,
-  .homeAvatar {
-    width: 44px;
-    height: 44px;
-  }
-
-  .homeAvatar {
+  .addrCard {
     border-radius: 16px;
+    padding: 10px 11px;
+    margin-bottom: 12px;
   }
 
-  .homeHeaderInfo strong {
-    font-size: 0.92rem;
-  }
+  .homeContent { padding-left: 12px; padding-right: 12px; }
 
-  .notificationBtn {
-    width: 42px;
-    height: 42px;
-    border-radius: 15px;
-  }
+  .servicesPanel { border-radius: 22px; padding: 13px 11px 12px; }
 
-  .heroAddress {
-    margin-top: 15px;
-    min-height: 68px;
-    grid-template-columns: 32px minmax(0, 1fr) 22px;
-  }
+  .actionsGrid { gap: 8px; }
 
-  .heroAddressIcon {
-    width: 32px;
-    height: 32px;
-  }
-
-  .heroAddressText strong {
-    font-size: 0.68rem;
-  }
-
-  .heroAddressText span {
-    font-size: 0.90rem;
-  }
-
-  .heroAddressText em {
-    font-size: 0.74rem;
-  }
-
-  .profileMenu {
-    width: 210px;
-  }
-
-  .homeContent {
-    padding-left: 10px;
-    padding-right: 10px;
-    margin-top: -20px;
-  }
-
-  .servicesPanel {
-    border-radius: 24px;
-    padding: 14px 12px;
-  }
-
-  .actionsGrid {
-    gap: 8px;
-  }
-
-  .carouselTrack {
-    grid-auto-columns: minmax(218px, 78%);
-  }
+  .carouselTrack { grid-auto-columns: minmax(205px, 76%); }
 }
 
 @media (max-width: 360px) {
-  .actionsGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .carouselTrack {
-    grid-auto-columns: minmax(210px, 82%);
-  }
-
-  .carouselCard {
-    min-height: 92px;
-  }
-
-  .carouselCard h2 {
-    font-size: 0.92rem;
-  }
-
-  .carouselCard p {
-    font-size: 0.7rem;
-  }
-
-  .infoBanner {
-    border-radius: 18px;
-    padding: 11px;
-    grid-template-columns: 38px 1fr;
-  }
-
-  .infoIcon {
-    width: 38px;
-    height: 38px;
-    border-radius: 14px;
-  }
+  .actionsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .carouselTrack { grid-auto-columns: minmax(195px, 82%); }
 }
 
 @media (max-height: 680px) {
-  .topStage {
-    min-height: 182px;
-    max-height: 205px;
-    padding-bottom: 24px;
-  }
-
-  .homeFloatingHeader {
-    min-height: 60px;
-  }
-
-  .heroAddress {
-    margin-top: 12px;
-    min-height: 62px;
-  }
-
-  .servicesHeader h1 {
-    font-size: 1.35rem;
-  }
-
-  .carouselCard {
-    min-height: 88px;
-  }
+  .top { padding-top: calc(10px + env(safe-area-inset-top)); }
+  .topBar { margin-bottom: 9px; }
+  .servicesHeader h1 { font-size: 1.15rem; }
 }
 
 @media (min-width: 720px) {
-  .topStage {
-    padding-left: 18px;
-    padding-right: 18px;
-    border-bottom-right-radius: 76px;
-  }
+  .top { padding-left: 20px; padding-right: 20px; }
 
-  .homeFloatingHeader,
-  .heroAddress,
+  .topBar,
+  .addrCard,
   .homeLayout {
     max-width: 920px;
     margin-left: auto;
     margin-right: auto;
   }
 
-  .heroAddress {
-    margin-top: 18px;
-  }
+  .addrCard { margin-left: auto; margin-right: auto; }
 
-  .homeContent {
-    padding-left: 18px;
-    padding-right: 18px;
-  }
+  .homeContent { padding-left: 20px; padding-right: 20px; }
 
-  .carouselTrack {
-    grid-auto-columns: minmax(280px, 34%);
-  }
-
-  .actionsGrid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
+  .carouselTrack { grid-auto-columns: minmax(260px, 34%); }
+  .actionsGrid   { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }

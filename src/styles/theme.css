@@ -1,0 +1,49 @@
+/* ── Tema claro (default) ─────────────────────────────────────── */
+:root {
+  --bg:            #f3f4f6;
+  --surface:       #ffffff;
+  --surface-2:     #f8fafc;
+  --border:        rgba(17, 24, 39, 0.08);
+  --text:          #111827;
+  --text-muted:    #6b7280;
+  --accent:        #39E010;
+  --accent-bg:     rgba(22, 163, 74, 0.10);
+  --accent-text:   #15803d;
+  --error:         #CC2020;
+  --error-bg:      rgba(204, 32, 32, 0.10);
+  --shadow-sm:     0 1px 3px rgba(17, 24, 39, 0.08);
+  --shadow-md:     0 4px 16px rgba(17, 24, 39, 0.10);
+  --shadow-lg:     0 12px 32px rgba(17, 24, 39, 0.12);
+}
+
+/* ── Tema oscuro ──────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg:            #0D1117;
+  --surface:       #161B22;
+  --surface-2:     #1A1D26;
+  --border:        rgba(255, 255, 255, 0.07);
+  --text:          #F0F6FC;
+  --text-muted:    rgba(240, 246, 252, 0.55);
+  --accent:        #39E010;
+  --accent-bg:     rgba(57, 224, 16, 0.12);
+  --accent-text:   #39E010;
+  --error:         #CC2020;
+  --error-bg:      rgba(204, 32, 32, 0.10);
+  --shadow-sm:     0 1px 3px rgba(0, 0, 0, 0.30);
+  --shadow-md:     0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lg:     0 12px 32px rgba(0, 0, 0, 0.40);
+}
+
+/* ── Transición suave al cambiar tema ─────────────────────────── */
+/* Solo se activa durante el cambio, no interfiere con otras animaciones */
+[data-theme-transitioning],
+[data-theme-transitioning] *,
+[data-theme-transitioning] *::before,
+[data-theme-transitioning] *::after {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    opacity 0.3s ease !important;
+}
