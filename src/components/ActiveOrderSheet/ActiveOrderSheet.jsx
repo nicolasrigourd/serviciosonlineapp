@@ -1,8 +1,8 @@
 // src/components/ActiveOrderSheet/ActiveOrderSheet.jsx
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loadActual, loadHistorial } from "../../lib/pedidosStore";
+import { loadActiveOrdersDb } from "../../lib/pedidosStore";
 import styles from "./ActiveOrderSheet.module.css";
 
 const SHEET_COLLAPSED = "collapsed";
@@ -52,30 +52,7 @@ function formatStatus(status) {
   return map[norm(status)] || "Pedido en curso";
 }
 
-function getActiveOrder(actual, historial) {
-  const activeStatuses = new Set([
-    "pendiente",
-    "asignado",
-    "en_camino",
-    "en curso",
-    "encurso",
-    "enviado_local",
-    "asignado_online",
-    "en_camino_origen",
-    "retirado",
-    "en_camino_destino",
-  ]);
 
-  const list = [actual, ...(Array.isArray(historial) ? historial : [])].filter(
-    Boolean
-  );
-
-  return (
-    list
-      .filter((pedido) => activeStatuses.has(norm(pedido?.status)))
-      .sort(byDateDesc)[0] || null
-  );
-}
 
 function getNextSheetMode(currentMode, direction) {
   if (direction === "up") {
@@ -96,8 +73,7 @@ function getNextSheetMode(currentMode, direction) {
 export default function ActiveOrderSheet() {
   const navigate = useNavigate();
 
-  const [actual, setActual] = useState(null);
-  const [historial, setHistorial] = useState([]);
+  const [activeOrders, setActiveOrders] = useState([]);
   const [sheetMode, setSheetMode] = useState(SHEET_PEEK);
 
   const dragRef = useRef({
@@ -107,15 +83,13 @@ export default function ActiveOrderSheet() {
   });
 
   useEffect(() => {
-    setActual(loadActual());
-    setHistorial(loadHistorial());
+    loadActiveOrdersDb().then(setActiveOrders);
   }, []);
 
-  const activeOrder = useMemo(() => {
-    return getActiveOrder(actual, historial);
-  }, [actual, historial]);
+  // Pedido principal a mostrar: el más reciente
+  const activeOrder = activeOrders.sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0))[0] ?? null;
 
-  const cadete = activeOrder?.assignedCadete || null;
+  const cadete = activeOrder?.assignment?.assignedDriver || activeOrder?.assignedCadete || null;
   const nombreCadete = getCadeteNombre(cadete);
 
   const hasActiveOrder = Boolean(activeOrder);
@@ -123,16 +97,11 @@ export default function ActiveOrderSheet() {
 
   const goTracking = () => {
     if (!activeOrder) {
-      navigate("/mis-pedidos");
+      navigate("/orders");
       return;
     }
-
-    if (activeOrder?.id === actual?.id) {
-      navigate("/flow/checkout");
-      return;
-    }
-
-    navigate("/mis-pedidos");
+    const orderId = activeOrder.orderId || activeOrder.id;
+    navigate(`/flow/checkout?orderId=${orderId}`);
   };
 
   const handlePointerDown = (event) => {

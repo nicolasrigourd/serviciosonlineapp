@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "../../components/BottomNav/BottomNav";
-import ActiveOrderSheet from "../../components/ActiveOrderSheet/ActiveOrderSheet";
+import OrdersDock from "../../components/OrdersDock/OrdersDock";
 import { useFlow } from "../../state/FlowContext";
 import { useAuth } from "../../state/AuthProvider";
 import { useTheme } from "../../hooks/useTheme";
@@ -37,7 +37,6 @@ export default function Home() {
 
   const { theme, toggleTheme } = useTheme();
   const [profileOpen, setProfileOpen]             = useState(false);
-  const [hasActiveOrder, setHasActiveOrder]       = useState(false);
   const [deliveryModalOpen, setDeliveryModalOpen] = useState(false);
   const [serviceCards, setServiceCards]           = useState([]);
 
@@ -112,25 +111,6 @@ export default function Home() {
       .catch(() => {});
   }, []);
 
-  // Órdenes activas desde IndexedDB
-  useEffect(() => {
-    async function checkActiveOrders() {
-      try {
-        const count = await clienteDb.orders
-          .filter((o) => {
-            const status = String(o.status || "").toLowerCase();
-            const step   = String(o.currentStep || "").toLowerCase();
-            return status !== "finalizado" && status !== "cancelado" && step !== "delivered";
-          })
-          .count();
-        setHasActiveOrder(count > 0);
-      } catch {}
-    }
-
-    checkActiveOrders();
-    window.addEventListener("focus", checkActiveOrders);
-    return () => window.removeEventListener("focus", checkActiveOrders);
-  }, []);
 
   // Navegación
   const goAddresses = () => { setProfileOpen(false); navigate("/direcciones"); };
@@ -358,7 +338,7 @@ export default function Home() {
 
       </main>
 
-      {hasActiveOrder && <ActiveOrderSheet />}
+      <OrdersDock />
       <BottomNav />
 
       {deliveryModalOpen && (

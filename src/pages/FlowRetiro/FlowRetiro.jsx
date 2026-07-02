@@ -49,8 +49,8 @@ export default function FlowRetiro() {
     setStep((s) => s - 1);
   }, [step, navigate]);
 
-  const handleComplete = useCallback(() => {
-    navigate("/flow/checkout");
+  const handleComplete = useCallback((orderId) => {
+    navigate(`/flow/checkout?orderId=${orderId}`);
   }, [navigate]);
 
   const wizardSteps = [

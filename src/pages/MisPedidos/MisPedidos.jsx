@@ -4,13 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useFlow } from "../../state/FlowContext";
 import PedidoCard from "../../components/PedidoCard/PedidoCard";
 import BottomNav from "../../components/BottomNav/BottomNav";
-import {
-  loadHistorial,
-  loadActual,
-  clearActual,
-  upsertInHistorial,
-  removeFromHistorial,
-} from "../../lib/pedidosStore";
+import { loadAllOrdersDb, cancelOrderDb, patchOrderDb } from "../../lib/pedidosStore";
+import { clienteDb } from "../../db/clienteDb";
 import styles from "./MisPedidos.module.css";
 
 const SEG_PENDIENTES = "pendientes";
@@ -73,56 +68,38 @@ export default function MisPedidos() {
   })();
 
   const [seg, setSeg] = useState(SEG_PENDIENTES);
-  const [historial, setHistorial] = useState([]);
-  const [actual, setActual] = useState(null);
+  const [todos, setTodos] = useState([]);
 
   useEffect(() => {
-    setHistorial(loadHistorial());
-    setActual(loadActual());
+    loadAllOrdersDb().then(setTodos);
   }, []);
 
-  const S_PEND = new Set(["pendiente"]);
+  const S_PEND = new Set(["pending", "pendiente"]);
   const S_CURSO = new Set([
-    "asignado",
-    "ofertando",
-    "ofertado",
-    "en_camino",
-    "en curso",
-    "encurso",
-    "en_curso",
+    "assigned", "asignado",
+    "offering", "ofertando", "ofertado",
+    "en_camino", "en_camino_origen", "en_camino_destino",
+    "en curso", "encurso", "en_curso",
+    "enviado_local", "asignado_online", "retirado",
   ]);
-  const S_FIN = new Set(["entregado", "completado", "finalizado"]);
-  const S_CAN = new Set(["cancelado", "rechazado"]);
+  const S_FIN = new Set(["completed", "delivered", "entregado", "completado", "finalizado"]);
+  const S_CAN = new Set(["cancelled", "canceled", "cancelado", "rechazado"]);
 
-  const pendientes = useMemo(() => {
-    const base = [
-      ...(actual && S_PEND.has(norm(actual.status)) ? [actual] : []),
-      ...toArr(historial).filter((p) => S_PEND.has(norm(p?.status))),
-    ];
+  const pendientes = useMemo(() =>
+    uniqById(toArr(todos).filter((p) => S_PEND.has(norm(p?.status)))).sort(byDateDesc),
+  [todos]);
 
-    return uniqById(base).sort(byDateDesc);
-  }, [actual, historial]);
+  const enCurso = useMemo(() =>
+    uniqById(toArr(todos).filter((p) => S_CURSO.has(norm(p?.status)))).sort(byDateDesc),
+  [todos]);
 
-  const enCurso = useMemo(() => {
-    const base = [
-      ...(actual && S_CURSO.has(norm(actual.status)) ? [actual] : []),
-      ...toArr(historial).filter((p) => S_CURSO.has(norm(p?.status))),
-    ];
+  const finalizados = useMemo(() =>
+    toArr(todos).filter((p) => S_FIN.has(norm(p?.status))).sort(byDateDesc),
+  [todos]);
 
-    return uniqById(base).sort(byDateDesc);
-  }, [actual, historial]);
-
-  const finalizados = useMemo(() => {
-    return toArr(historial)
-      .filter((p) => S_FIN.has(norm(p?.status)))
-      .sort(byDateDesc);
-  }, [historial]);
-
-  const cancelados = useMemo(() => {
-    return toArr(historial)
-      .filter((p) => S_CAN.has(norm(p?.status)))
-      .sort(byDateDesc);
-  }, [historial]);
+  const cancelados = useMemo(() =>
+    toArr(todos).filter((p) => S_CAN.has(norm(p?.status))).sort(byDateDesc),
+  [todos]);
 
   const currentList =
     seg === SEG_PENDIENTES
@@ -136,40 +113,22 @@ export default function MisPedidos() {
   const totalPedidos =
     pendientes.length + enCurso.length + finalizados.length + cancelados.length;
 
+  const reloadOrders = () => loadAllOrdersDb().then(setTodos);
+
   const handleVer = (id) => {
-    const isActual = actual?.id === id;
-
-    if (isActual) {
-      navigate("/flow/checkout");
-      return;
-    }
-
-    alert(`Detalle de ${id} pendiente de implementar.`);
+    navigate(`/flow/checkout?orderId=${id}`);
   };
 
-  const handleCancelar = (id) => {
+  const handleCancelar = async (id) => {
     if (!confirm("¿Seguro que querés cancelar este pedido?")) return;
-
-    if (actual?.id === id) {
-      const updated = { ...actual, status: "cancelado" };
-      upsertInHistorial(updated);
-      clearActual();
-      setActual(null);
-      setHistorial(loadHistorial());
-      return;
-    }
-
-    const old = historial.find((p) => p.id === id);
-
-    if (old) {
-      upsertInHistorial({ ...old, status: "cancelado" });
-      setHistorial(loadHistorial());
-    }
+    await cancelOrderDb(id).catch(() => {});
+    reloadOrders();
   };
 
-  const handleEliminar = (id) => {
+  const handleEliminar = async (id) => {
     if (!confirm("¿Eliminar este pedido del historial?")) return;
-    setHistorial(removeFromHistorial(id));
+    await clienteDb.orders.delete(id).catch(() => {});
+    reloadOrders();
   };
 
   const handleRepetir = (pedido) => {
@@ -269,9 +228,9 @@ export default function MisPedidos() {
           <div className={styles.list}>
             {currentList.map((pedido) => (
               <PedidoCard
-                key={pedido.id}
+                key={pedido.orderId || pedido.id}
                 pedido={pedido}
-                isCurrent={pedido.id === actual?.id}
+                isCurrent={S_CURSO.has(norm(pedido?.status)) || S_PEND.has(norm(pedido?.status))}
                 onVer={handleVer}
                 onCancelar={handleCancelar}
                 onRepetir={handleRepetir}

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   doc,
   onSnapshot,
@@ -10,7 +10,7 @@ import {
 import { useFlow } from "../../state/FlowContext";
 import styles from "./Checkout.module.css";
 import { db } from "../../services/firebase";
-import { cancelActualAndArchive } from "../../lib/pedidosStore";
+import { loadOrderByIdDb, cancelOrderDb, patchOrderDb } from "../../lib/pedidosStore";
 import TrackingPedido from "../../components/TrackingPedido/TrackingPedido";
 
 function norm(value) {
@@ -585,6 +585,8 @@ function StatusIllustration({ type }) {
 
 export default function Checkout() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const orderIdFromUrl = searchParams.get("orderId");
 
   const flow = (() => {
     try {
@@ -599,17 +601,15 @@ export default function Checkout() {
   const [pedido, setPedido] = useState(null);
   const [msgIdx, setMsgIdx] = useState(0);
 
+  // Carga inicial desde Dexie por orderId en URL
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("NuevoPedido");
-      setPedido(raw ? JSON.parse(raw) : null);
-    } catch {
-      setPedido(null);
-    }
-  }, []);
+    if (!orderIdFromUrl) { setPedido(null); return; }
+    loadOrderByIdDb(orderIdFromUrl).then((order) => setPedido(order || null));
+  }, [orderIdFromUrl]);
 
   const pedidoId = getOrderId(pedido);
 
+  // Listener Firestore → actualiza Dexie + estado local
   useEffect(() => {
     if (!pedidoId) return;
 
@@ -635,13 +635,8 @@ export default function Checkout() {
         };
 
         setPedido((prev) => {
-          const merged = {
-            ...(prev || {}),
-            ...pedidoActualizado,
-          };
-
-          localStorage.setItem("NuevoPedido", JSON.stringify(merged));
-
+          const merged = { ...(prev || {}), ...pedidoActualizado };
+          patchOrderDb(pedidoId, merged).catch(() => {});
           return merged;
         });
       },
@@ -690,12 +685,12 @@ export default function Checkout() {
           "cancellation.cancelledAtMs": Date.now(),
           "cancellation.reason": "customer_cancelled_from_checkout",
         });
+        await cancelOrderDb(id);
       }
     } catch (error) {
       console.error("[CHECKOUT][CANCEL] Error cancelando pedido:", error);
     }
 
-    cancelActualAndArchive();
     reset?.();
     navigate("/orders", { replace: true });
   };

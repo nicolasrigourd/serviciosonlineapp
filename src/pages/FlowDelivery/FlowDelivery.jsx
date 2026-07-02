@@ -56,8 +56,8 @@ export default function FlowDelivery() {
     setStep((s) => s - 1);
   }, [step, navigate]);
 
-  const handleComplete = useCallback(() => {
-    navigate("/flow/checkout");
+  const handleComplete = useCallback((orderId) => {
+    navigate(`/flow/checkout?orderId=${orderId}`);
   }, [navigate]);
 
   // Paso 0: pantalla de elección full-screen

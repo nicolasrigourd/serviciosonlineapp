@@ -335,7 +335,7 @@ export default function StepResumen({ onConfirm }) {
       await setDoc(doc(db, "orders", orderId), order, { merge: false });
 
       resetDraft();
-      onConfirm?.();
+      onConfirm?.(orderId);
     } catch (e) {
       console.error("[RESUMEN] Error al confirmar:", e);
       setError("No pudimos crear el pedido. Intentá nuevamente.");
