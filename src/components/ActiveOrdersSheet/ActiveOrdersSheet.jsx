@@ -104,6 +104,15 @@ function StatusStepper({ tone }) {
   );
 }
 
+function StatusDot({ tone }) {
+  return (
+    <span
+      className={`${styles.dot} ${styles[`dot_${tone}`]}`}
+      aria-hidden="true"
+    />
+  );
+}
+
 function ChevronUp({ flipped }) {
   return (
     <svg
