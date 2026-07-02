@@ -62,6 +62,16 @@ function getDriver(order) {
   };
 }
 
+function getRoute(order) {
+  const origin = String(order?.pickup?.address || "").trim();
+  const dest   = String(order?.dropoff?.address || "").trim();
+  if (!origin && !dest) return null;
+  const shorten = (addr) => addr.split(",")[0].trim();
+  if (!dest) return shorten(origin);
+  if (!origin) return shorten(dest);
+  return `${shorten(origin)} → ${shorten(dest)}`;
+}
+
 function shortId(id) {
   const v = String(id || "");
   return v.length > 8 ? `#${v.slice(-6)}` : `#${v}`;
@@ -69,12 +79,28 @@ function shortId(id) {
 
 // ─── sub-components ─────────────────────────────────────────
 
-function StatusDot({ tone }) {
+const STEP_INDEX = { searching: 0, offering: 0, assigned: 1, moving: 2 };
+
+function StatusStepper({ tone }) {
+  const active = STEP_INDEX[tone] ?? 0;
   return (
-    <span
-      className={`${styles.dot} ${styles[`dot_${tone}`]}`}
-      aria-hidden="true"
-    />
+    <div className={styles.stepper} aria-hidden="true">
+      {[0, 1, 2].map((i) => (
+        <React.Fragment key={i}>
+          <span
+            className={[
+              styles.sDot,
+              i < active  ? styles.sDotDone    : "",
+              i === active ? styles.sDotActive : "",
+              i === active && tone === "offering" ? styles.sDotOffering : "",
+            ].filter(Boolean).join(" ")}
+          />
+          {i < 2 && (
+            <span className={`${styles.sLine} ${i < active ? styles.sLineDone : ""}`} />
+          )}
+        </React.Fragment>
+      ))}
+    </div>
   );
 }
 
@@ -108,9 +134,10 @@ function ProgressBar({ tone }) {
 }
 
 function OrderCard({ order, onOpen }) {
-  const id = order.orderId || order.id;
+  const id    = order.orderId || order.id;
   const { label, tone } = getStatusInfo(order);
   const driver = getDriver(order);
+  const route  = getRoute(order);
 
   return (
     <button
@@ -119,26 +146,25 @@ function OrderCard({ order, onOpen }) {
       aria-label={`Pedido ${shortId(id)} — ${label}. Ver mapa`}
     >
       <div className={styles.cardMain}>
-        {driver ? (
-          <div className={styles.driverAvatar}>{driver.name.charAt(0)}</div>
-        ) : (
-          <StatusDot tone={tone} />
-        )}
+        <div className={`${styles.cardAvatar} ${!driver ? styles.cardAvatarSearching : ""}`}>
+          {driver ? (
+            driver.name.charAt(0)
+          ) : (
+            <span className={`${styles.dot} ${styles[`dot_${tone}`]}`} aria-hidden="true" />
+          )}
+        </div>
 
         <div className={styles.cardText}>
-          {driver ? (
-            <>
-              <span className={styles.driverName}>{driver.name}</span>
-              <span className={styles.cardSub}>
-                {driver.vehicle}{driver.plate ? ` · ${driver.plate}` : ""}
-              </span>
-              <span className={styles.cardStatus}>{label}</span>
-            </>
-          ) : (
-            <>
-              <span className={styles.cardId}>{shortId(id)}</span>
-              <span className={styles.cardStatus}>{label}</span>
-            </>
+          <span className={styles.cardPrimary}>
+            {driver ? driver.name : shortId(id)}
+          </span>
+          <span className={styles.cardSub}>
+            {driver
+              ? `${driver.vehicle}${driver.plate ? ` · ${driver.plate}` : ""}`
+              : label}
+          </span>
+          {route && (
+            <span className={styles.cardRoute}>{route}</span>
           )}
         </div>
 
@@ -157,7 +183,7 @@ function OrderCard({ order, onOpen }) {
         </span>
       </div>
 
-      <ProgressBar tone={tone} />
+      <StatusStepper tone={tone} />
     </button>
   );
 }
@@ -193,10 +219,11 @@ export default function ActiveOrdersSheet() {
   const primaryId = primary.orderId || primary.id;
   const { label: primaryLabel, tone: primaryTone } = getStatusInfo(primary);
   const primaryDriver = getDriver(primary);
+  const primaryRoute  = getRoute(primary);
   const extraCount = orders.length - 1;
 
   // Sheet height: peek strip (PEEK_H) + list content height, capped at 65dvh
-  const LIST_ITEM_H = 86;
+  const LIST_ITEM_H = 96;
   const HEADER_H = 46;
   const VER_H = orders.length >= 5 ? 50 : 0;
   const expandedRaw = PEEK_H + HEADER_H + orders.length * LIST_ITEM_H + VER_H;
@@ -259,13 +286,15 @@ export default function ActiveOrdersSheet() {
                 <>
                   <span className={styles.peekName}>{primaryDriver.name}</span>
                   <span className={styles.peekSub}>
-                    {primaryDriver.vehicle}{primaryDriver.plate ? ` · ${primaryDriver.plate}` : ""}
+                    {primaryRoute || `${primaryDriver.vehicle}${primaryDriver.plate ? ` · ${primaryDriver.plate}` : ""}`}
                   </span>
                 </>
               ) : (
                 <>
                   <span className={styles.peekId}>{shortId(primaryId)}</span>
-                  <span className={styles.peekStatus}>{primaryLabel}</span>
+                  <span className={styles.peekStatus}>
+                    {primaryRoute || primaryLabel}
+                  </span>
                 </>
               )}
             </div>
