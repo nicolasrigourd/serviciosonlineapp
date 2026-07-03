@@ -211,8 +211,15 @@
   transition: width 0.6s ease;
 }
 
-.fill_moving {
-  width: 85%;
+.fill_moving,
+.fill_moving_pickup {
+  width: 75%;
+  background: #3b82f6;
+  transition: width 0.6s ease;
+}
+
+.fill_moving_dropoff {
+  width: 90%;
   background: #3b82f6;
   transition: width 0.6s ease;
 }

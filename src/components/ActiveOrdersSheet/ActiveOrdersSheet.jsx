@@ -6,7 +6,7 @@ import OrderTrackingModal from "../OrderTrackingModal/OrderTrackingModal";
 import styles from "./ActiveOrdersSheet.module.css";
 
 // ─── helpers ────────────────────────────────────────────────
-const PRIORITY = { moving: 0, assigned: 1, offering: 2, searching: 3 };
+const PRIORITY = { moving_dropoff: 0, moving_pickup: 1, assigned: 2, offering: 3, searching: 4 };
 
 const ACTIVE_STATUSES = new Set([
   "pending", "pendiente",
@@ -17,33 +17,34 @@ const ACTIVE_STATUSES = new Set([
   "enviado_local", "asignado_online",
   "retirado",
 ]);
-const PEEK_H = 76; // height of the handle+peek strip in px
+const PEEK_H = 90; // handle(12) + peekRow(~54) + stepper(24)
 
 const norm = (s) => String(s || "").toLowerCase().trim();
 
+// stepIndex: 0=Recibido, 1=Asignado, 2=A origen, 3=A destino, 4=Entregado
 function getStatusInfo(order) {
-  const status = norm(order?.status);
-  const step = norm(order?.delivery?.currentStep || "");
+  const status    = norm(order?.status);
+  const step      = norm(order?.delivery?.currentStep || "");
   const hasDriver = Boolean(
     order?.assignment?.assignedDriverId || order?.assignedDriverId
   );
 
-  if (status === "pending" || status === "pendiente")
-    return { label: "Buscando repartidor", tone: "searching" };
-  if (status === "offering" || status === "ofertando")
-    return { label: "Oferta enviada", tone: "offering" };
-  if (step === "started_pickup")
-    return { label: "En camino al origen", tone: "moving" };
-  if (step === "arrived_pickup")
-    return { label: "En el punto de retiro", tone: "moving" };
-  if (step === "go_to_dropoff")
-    return { label: "En camino al destino", tone: "moving" };
   if (step === "arrived_dropoff")
-    return { label: "Llegó al destino", tone: "moving" };
+    return { label: "Llegó al destino",      tone: "moving_dropoff", stepIndex: 3 };
+  if (step === "go_to_dropoff")
+    return { label: "En camino al destino",  tone: "moving_dropoff", stepIndex: 3 };
+  if (step === "arrived_pickup")
+    return { label: "En el punto de retiro", tone: "moving_pickup",  stepIndex: 2 };
+  if (step === "started_pickup")
+    return { label: "En camino al origen",   tone: "moving_pickup",  stepIndex: 2 };
   if (hasDriver || status === "assigned" || status === "asignado")
-    return { label: "Repartidor asignado", tone: "assigned" };
+    return { label: "Repartidor asignado",   tone: "assigned",       stepIndex: 1 };
+  if (status === "offering" || status === "ofertando")
+    return { label: "Oferta enviada",        tone: "offering",       stepIndex: 0 };
+  if (status === "pending"  || status === "pendiente")
+    return { label: "Buscando repartidor",   tone: "searching",      stepIndex: 0 };
 
-  return { label: "En curso", tone: "searching" };
+  return { label: "En curso", tone: "searching", stepIndex: 0 };
 }
 
 function getDriver(order) {
@@ -79,24 +80,24 @@ function shortId(id) {
 
 // ─── sub-components ─────────────────────────────────────────
 
-const STEP_INDEX = { searching: 0, offering: 0, assigned: 1, moving: 2 };
+// 5 dots: Recibido(0) → Asignado(1) → A origen(2) → A destino(3) → Entregado(4)
+const STEPPER_TOTAL = 5;
 
-function StatusStepper({ tone }) {
-  const active = STEP_INDEX[tone] ?? 0;
+function StatusStepper({ stepIndex = 0, tone = "searching" }) {
   return (
     <div className={styles.stepper} aria-hidden="true">
-      {[0, 1, 2].map((i) => (
+      {Array.from({ length: STEPPER_TOTAL }, (_, i) => (
         <React.Fragment key={i}>
           <span
             className={[
               styles.sDot,
-              i < active  ? styles.sDotDone    : "",
-              i === active ? styles.sDotActive : "",
-              i === active && tone === "offering" ? styles.sDotOffering : "",
+              i < stepIndex  ? styles.sDotDone    : "",
+              i === stepIndex ? styles.sDotActive  : "",
+              i === stepIndex && tone === "offering" ? styles.sDotOffering : "",
             ].filter(Boolean).join(" ")}
           />
-          {i < 2 && (
-            <span className={`${styles.sLine} ${i < active ? styles.sLineDone : ""}`} />
+          {i < STEPPER_TOTAL - 1 && (
+            <span className={`${styles.sLine} ${i < stepIndex ? styles.sLineDone : ""}`} />
           )}
         </React.Fragment>
       ))}
@@ -144,7 +145,7 @@ function ProgressBar({ tone }) {
 
 function OrderCard({ order, onOpen }) {
   const id    = order.orderId || order.id;
-  const { label, tone } = getStatusInfo(order);
+  const { label, tone, stepIndex } = getStatusInfo(order);
   const driver = getDriver(order);
   const route  = getRoute(order);
 
@@ -192,7 +193,7 @@ function OrderCard({ order, onOpen }) {
         </span>
       </div>
 
-      <StatusStepper tone={tone} />
+      <StatusStepper stepIndex={stepIndex} tone={tone} />
     </button>
   );
 }
@@ -226,7 +227,7 @@ export default function ActiveOrdersSheet() {
   )[0];
 
   const primaryId = primary.orderId || primary.id;
-  const { label: primaryLabel, tone: primaryTone } = getStatusInfo(primary);
+  const { label: primaryLabel, tone: primaryTone, stepIndex: primaryStep } = getStatusInfo(primary);
   const primaryDriver = getDriver(primary);
   const primaryRoute  = getRoute(primary);
   const extraCount = orders.length - 1;
@@ -318,7 +319,7 @@ export default function ActiveOrdersSheet() {
             </div>
           </div>
 
-          <ProgressBar tone={primaryTone} />
+          <StatusStepper stepIndex={primaryStep} tone={primaryTone} />
         </div>
 
         {/* ── Expanded list ──────────────────────────────────── */}
