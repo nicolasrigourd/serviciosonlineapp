@@ -96,11 +96,27 @@ function _syncPricing() {
 }
 
 function _syncOrders(uid) {
+  let firstSnapshot = true;
   const ref = query(
     collection(db, "orders"),
     where("customerUid", "==", uid),
   );
   return onSnapshot(ref, (snap) => {
+    // En el primer snapshot reconciliamos: cualquier pedido en IndexedDB que
+    // Firestore ya no devuelve fue borrado mientras la app estaba cerrada.
+    if (firstSnapshot) {
+      firstSnapshot = false;
+      const firestoreIds = new Set(snap.docs.map((d) => d.id));
+      clienteDb.orders.toArray()
+        .then((local) => {
+          const toDelete = local
+            .map((o) => o.orderId)
+            .filter((id) => id && !firestoreIds.has(id));
+          if (toDelete.length) clienteDb.orders.bulkDelete(toDelete).catch(() => {});
+        })
+        .catch(() => {});
+    }
+
     snap.docChanges().forEach((change) => {
       const data = { ...change.doc.data(), orderId: change.doc.id };
       if (change.type === "removed") {
